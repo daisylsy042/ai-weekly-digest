@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Weekly Digest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #5c5c5c;
+    --text-muted: #8a8a8a;
+    --border: rgba(26, 26, 26, 0.1);
+    --border-strong: rgba(26, 26, 26, 0.18);
+    --rail-width: 64px;
+    --panel-width: 320px;
+    --shadow-panel: 4px 0 32px rgba(26, 26, 26, 0.1);
+    --shadow-card: 0 16px 48px rgba(26, 26, 26, 0.1);
+    --transition: 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* Relais 风格几何无衬线（DM Sans ≈ Avenir / Gill Sans） */
+    --font: "DM Sans", "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei", sans-serif;
+    --hero-title-size: clamp(40px, 6vw, 56px);
+    --card-title-size: 20px;
+    --card-body-size: 14px;
+    --card-cta-size: 11px;
+    --card-meta-size: 11px;
+    --card-height: 520px;
+    --card-media-height: 200px;
+    --card-body-min: 280px;
+  }
+
+  @media (max-width: 767px) {
+    :root {
+      --card-height: 500px;
+      --card-media-height: 180px;
+      --card-body-min: 260px;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 400;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+  }
+
+  /* —— Icon Rail —— */
+  .icon-rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--rail-width);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    gap: 4px;
+    z-index: 200;
+  }
+
+  .rail-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: 2px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .rail-btn:hover {
+    background: rgba(26, 26, 26, 0.05);
+    color: var(--text);
+  }
+
+  .rail-btn.is-active {
+    background: rgba(26, 26, 26, 0.08);
+    color: var(--text);
+  }
+
+  .rail-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* —— Slide Panels —— */
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 26, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 150;
+  }
+
+  #overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .slide-panel {
+    position: fixed;
+    top: 0;
+    left: var(--rail-width);
+    width: var(--panel-width);
+    height: 100vh;
+    background: var(--surface);
+    box-shadow: var(--shadow-panel);
+    transform: translateX(-100%);
+    transition: transform var(--transition);
+    z-index: 180;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .slide-panel.is-open {
+    transform: translateX(0);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .panel-header h2 {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .panel-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s, background 0.2s;
+    border-radius: 2px;
+  }
+
+  .panel-close:hover {
+    color: var(--text);
+    background: rgba(26, 26, 26, 0.05);
+  }
+
+  .panel-close svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 2px;
+  }
+
+  .search-field {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    background: transparent;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+
+  .search-field::placeholder { color: var(--text-muted); }
+  .search-field:focus { border-bottom-color: var(--text); }
+
+  .filter-section__label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  .chip-group::-webkit-scrollbar { width: 3px; height: 3px; }
+  .chip-group::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 2px;
+  }
+
+  .chip {
+    appearance: none;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  .chip:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  .chip.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .chip.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btn-reset {
+    margin-top: auto;
+    padding: 12px 0;
+    border: none;
+    border-top: 1px solid var(--border);
+    background: transparent;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+    font-family: inherit;
+  }
+
+  .btn-reset:hover { color: var(--text); }
+
+  /* —— Main Column —— */
+  .main {
+    margin-left: var(--rail-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* —— Hero：右侧 AI 神经网络球体配图（请打开 index.html，勿直接预览 template） —— */
+  .hero {
+    position: relative;
+    min-height: 78vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    background-color: var(--bg);
+    padding: 88px 56px 72px calc(var(--rail-width) + 48px);
+    text-align: left;
+    overflow: hidden;
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 72% 45%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .hero__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      var(--bg) 0%,
+      var(--bg) 10%,
+      rgba(247, 245, 240, 0.9) 28%,
+      rgba(247, 245, 240, 0.45) 42%,
+      rgba(247, 245, 240, 0.08) 54%,
+      transparent 64%
+    );
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 2;
+    max-width: 640px;
+    width: 100%;
+  }
+
+  .hero__eyebrow {
+    margin: 0 0 12px;
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .hero__title {
+    margin: 0 0 8px;
+    font-family: var(--font);
+    font-size: var(--hero-title-size);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--text);
+  }
+
+  .hero__subtitle {
+    margin: 0 0 20px;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+
+  .hero__meta {
+    margin: 0 0 36px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+
+  .hero-search-wrap {
+    position: relative;
+    max-width: 480px;
+    width: 100%;
+  }
+
+  .hero-search {
+    width: 100%;
+    padding: 16px 20px;
+    border: none;
+    border-bottom: 1px solid var(--text);
+    background: transparent;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text);
+    outline: none;
+    font-family: var(--font);
+    transition: border-color 0.25s ease;
+  }
+
+  .hero-search::placeholder { color: transparent; }
+
+  .hero-search:focus {
+    border-bottom-width: 2px;
+  }
+
+  .hero-search-ghost {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text-muted);
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+
+  .hero-search-wrap.is-typing .hero-search-ghost::after {
+    content: "|";
+    margin-left: 2px;
+    animation: caret-blink 1s step-end infinite;
+  }
+
+  .hero-search-wrap.has-value .hero-search-ghost,
+  .hero-search:focus + .hero-search-ghost {
+    opacity: 0;
+  }
+
+  @keyframes caret-blink {
+    50% { opacity: 0; }
+  }
+
+  /* —— Content —— */
+  #content-area {
+    flex: 1;
+    padding: 48px 56px 80px;
+    scroll-margin-top: 24px;
+  }
+
+  .day-section {
+    margin-bottom: 64px;
+    scroll-margin-top: 24px;
+  }
+
+  .day-section:last-child { margin-bottom: 0; }
+
+  .day-section__header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .day-section__header h2 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .day-section__count {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+
+  @media (min-width: 768px) {
+    .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 1100px) {
+    .cards-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* —— Story Cards —— */
+  .story-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: var(--card-height);
+    min-height: var(--card-height);
+    max-height: var(--card-height);
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    scroll-margin-top: 20px;
+    transition: transform 0.32s cubic-bezier(0.25, 0.1, 0.25, 1),
+                box-shadow 0.32s ease;
+  }
+
+  .story-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .story-card--focus {
+    animation: card-focus 1.2s ease;
+  }
+
+  @keyframes card-focus {
+    0%, 100% { box-shadow: none; }
+    40% { box-shadow: 0 0 0 1px var(--text), var(--shadow-card); }
+  }
+
+  .story-card__media {
+    position: relative;
+    flex: 0 0 var(--card-media-height);
+    width: 100%;
+    height: var(--card-media-height);
+    overflow: hidden;
+    background: linear-gradient(145deg, #ebe8e1 0%, #ddd9d0 50%, #d4cfc4 100%);
+  }
+
+  .story-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .story-card__media img.story-card__media-img--fallback {
+    opacity: 0;
+  }
+
+  .story-card:hover .story-card__media img {
+    transform: scale(1.04);
+  }
+
+  .story-card__body {
+    flex: 1 1 auto;
+    min-height: var(--card-body-min);
+    padding: 24px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: var(--font);
+    font-size: var(--card-body-size);
+    font-weight: 400;
+  }
+
+  .story-card__date {
+    font-family: var(--font);
+    font-size: var(--card-meta-size);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .story-card__title,
+  .story-card h3.story-card__title {
+    margin: 0 0 12px;
+    padding: 0;
+    flex: 0 0 auto;
+    min-height: calc(var(--card-title-size) * 1.3 * 2);
+    max-height: calc(var(--card-title-size) * 1.3 * 2);
+    font-family: var(--font);
+    font-size: var(--card-title-size);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .story-card__title a,
+  .story-card h3.story-card__title a {
+    display: block;
+    font-family: inherit;
+    font-size: var(--card-title-size);
+    font-weight: 700;
+    line-height: 1.3;
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .story-card__title a:hover { opacity: 0.65; }
+
+  .story-card__excerpt-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .story-card__excerpt,
+  .story-card__excerpt-wrap p.story-card__excerpt {
+    margin: 0;
+    font-family: var(--font);
+    font-size: var(--card-body-size);
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--text);
+  }
+
+  .story-card__excerpt.is-clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-height: calc(var(--card-body-size) * 1.65 * 4);
+    max-height: calc(var(--card-body-size) * 1.65 * 4);
+  }
+
+  .excerpt-toggle {
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s;
+  }
+
+  .excerpt-toggle:hover { color: var(--text); }
+
+  .excerpt-toggle[hidden] { display: none; }
+
+  .story-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 0 0 auto;
+    margin-top: auto;
+    padding-top: 14px;
+    max-height: 56px;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+  }
+
+  .tag {
+    font-family: var(--font);
+    font-size: var(--card-meta-size);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    background: rgba(26, 26, 26, 0.05);
+    padding: 4px 8px;
+  }
+
+  .story-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    margin-top: 12px;
+    font-family: var(--font);
+    font-size: var(--card-cta-size);
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: gap 0.25s ease, opacity 0.2s;
+  }
+
+  .story-card__cta:hover {
+    gap: 8px;
+    opacity: 0.7;
+  }
+
+  .story-card__cta::after {
+    content: "\2192";
+    font-size: var(--card-cta-size);
+    line-height: 1;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 100px 24px;
+    color: var(--text-muted);
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+
+  .site-footer {
+    padding: 28px 48px 40px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    text-align: center;
+    background: var(--bg);
+  }
+
+  @media (max-width: 767px) {
+    .hero {
+      padding: 72px 24px 56px calc(var(--rail-width) + 20px);
+      min-height: 70vh;
+    }
+    #content-area { padding: 32px 24px 56px; }
+    .site-footer { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="icon-rail" aria-label="工具栏">
+  <button type="button" class="rail-btn" id="btn-search" aria-label="搜索" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/>
+      <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+    </svg>
+  </button>
+  <button type="button" class="rail-btn" id="btn-filter" aria-label="筛选" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <line x1="4" y1="7" x2="20" y2="7"/>
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <line x1="4" y1="17" x2="20" y2="17"/>
+    </svg>
+  </button>
+</nav>
+
+<div id="overlay" aria-hidden="true"></div>
+
+<aside id="panel-search" class="slide-panel" aria-label="搜索面板" aria-hidden="true">
+  <div class="panel-header">
+    <h2>搜索</h2>
+    <button type="button" class="panel-close" data-close-panel aria-label="关闭搜索">
+      <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body">
+    <input type="search" id="search-input-side" class="search-field"
+      placeholder="热点搜索..." autocomplete="off">
+  </div>
+</aside>
+
+<aside id="panel-filter" class="slide-panel" aria-label="筛选面板" aria-hidden="true">
+  <div class="panel-header">
+    <h2>筛选</h2>
+    <button type="button" class="panel-close" data-close-panel aria-label="关闭筛选">
+      <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body">
+    <div class="filter-section">
+      <span class="filter-section__label">日期</span>
+      <div class="chip-group" id="date-filters"></div>
+    </div>
+
+    <div class="filter-section">
+      <span class="filter-section__label">来源</span>
+      <div class="segmented" id="region-filters">
+        <button type="button" class="chip active" data-reg="all" onclick="toggleRegion('all')">全部</button>
+        <button type="button" class="chip" data-reg="domestic" onclick="toggleRegion('domestic')">国内</button>
+        <button type="button" class="chip" data-reg="overseas" onclick="toggleRegion('overseas')">海外</button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <span class="filter-section__label">工具</span>
+      <div class="chip-group" id="tool-filters"></div>
+    </div>
+
+    <div class="filter-section">
+      <span class="filter-section__label">技术点</span>
+      <div class="chip-group" id="tech-cloud"></div>
+    </div>
+
+    <button type="button" class="btn-reset" onclick="resetFilters()">重置筛选</button>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="hero">
+    <img class="hero__bg" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201920%201080%22%20fill%3D%22none%22%20aria-hidden%3D%22true%22%3E%0A%20%20%3Crect%20width%3D%221920%22%20height%3D%221080%22%20fill%3D%22%23f7f5f0%22/%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22coreGlow%22%20cx%3D%2272%25%22%20cy%3D%2240%25%22%20r%3D%2238%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%20stop-opacity%3D%220.95%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2245%25%22%20stop-color%3D%22%23faf6eb%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f7f5f0%22%20stop-opacity%3D%220%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22leftFade%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%220%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f7f5f0%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2242%25%22%20stop-color%3D%22%23f7f5f0%22%20stop-opacity%3D%220.9%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2268%25%22%20stop-color%3D%22%23f7f5f0%22%20stop-opacity%3D%220.2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f7f5f0%22%20stop-opacity%3D%220%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22chipFill%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f3edd8%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22glow%22%20x%3D%22-50%25%22%20y%3D%22-50%25%22%20width%3D%22200%25%22%20height%3D%22200%25%22%3E%0A%20%20%20%20%20%20%3CfeGaussianBlur%20stdDeviation%3D%228%22%20result%3D%22b%22/%3E%0A%20%20%20%20%20%20%3CfeMerge%3E%3CfeMergeNode%20in%3D%22b%22/%3E%3CfeMergeNode%20in%3D%22SourceGraphic%22/%3E%3C/feMerge%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%3C/defs%3E%0A%0A%20%20%3Crect%20width%3D%221920%22%20height%3D%221080%22%20fill%3D%22url%28%23coreGlow%29%22/%3E%0A%0A%20%20%3C%21--%20dot%20grid%20--%3E%0A%20%20%3Cg%20opacity%3D%220.2%22%20fill%3D%22%23d8ccb6%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221180%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221220%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221260%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221300%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221340%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221380%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221420%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221460%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221500%22%20cy%3D%22200%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221180%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221220%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221260%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221300%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221340%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221380%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221420%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221460%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221500%22%20cy%3D%22240%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221540%22%20cy%3D%22280%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221580%22%20cy%3D%22320%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221620%22%20cy%3D%22360%22%20r%3D%221.5%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%221660%22%20cy%3D%22400%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221700%22%20cy%3D%22440%22%20r%3D%221.5%22/%3E%3Ccircle%20cx%3D%221740%22%20cy%3D%22480%22%20r%3D%221.5%22/%3E%0A%20%20%3C/g%3E%0A%0A%20%20%3C%21--%20AI%20chip%20--%3E%0A%20%20%3Cg%20transform%3D%22translate%281380%20340%29%22%20filter%3D%22url%28%23glow%29%22%3E%0A%20%20%20%20%3Crect%20x%3D%22-72%22%20y%3D%22-72%22%20width%3D%22144%22%20height%3D%22144%22%20rx%3D%2212%22%20fill%3D%22url%28%23chipFill%29%22%20stroke%3D%22%23e5dcc8%22%20stroke-width%3D%221.5%22/%3E%0A%20%20%20%20%3Crect%20x%3D%22-48%22%20y%3D%22-48%22%20width%3D%2296%22%20height%3D%2296%22%20rx%3D%226%22%20fill%3D%22%23faf8f4%22%20stroke%3D%22%23ddd2bc%22%20stroke-width%3D%221%22/%3E%0A%20%20%20%20%3Ctext%20x%3D%220%22%20y%3D%228%22%20text-anchor%3D%22middle%22%20font-family%3D%22ui-monospace%2C%20monospace%22%20font-size%3D%2222%22%20font-weight%3D%22600%22%20fill%3D%22%23c4b59a%22%20letter-spacing%3D%220.15em%22%3EAI%3C/text%3E%0A%20%20%20%20%3Cline%20x1%3D%22-88%22%20y1%3D%22-40%22%20x2%3D%22-72%22%20y2%3D%22-40%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%22-88%22%20y1%3D%220%22%20x2%3D%22-72%22%20y2%3D%220%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%22-88%22%20y1%3D%2240%22%20x2%3D%22-72%22%20y2%3D%2240%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2272%22%20y1%3D%22-40%22%20x2%3D%2288%22%20y2%3D%22-40%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2272%22%20y1%3D%220%22%20x2%3D%2288%22%20y2%3D%220%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2272%22%20y1%3D%2240%22%20x2%3D%2288%22%20y2%3D%2240%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%22-40%22%20y1%3D%22-88%22%20x2%3D%22-40%22%20y2%3D%22-72%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%220%22%20y1%3D%22-88%22%20x2%3D%220%22%20y2%3D%22-72%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2240%22%20y1%3D%22-88%22%20x2%3D%2240%22%20y2%3D%22-72%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%22-40%22%20y1%3D%2272%22%20x2%3D%22-40%22%20y2%3D%2288%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%220%22%20y1%3D%2272%22%20x2%3D%220%22%20y2%3D%2288%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2240%22%20y1%3D%2272%22%20x2%3D%2240%22%20y2%3D%2288%22%20stroke%3D%22%23d4c9b4%22%20stroke-width%3D%222%22/%3E%0A%20%20%3C/g%3E%0A%0A%20%20%3C%21--%20neural%20sphere%20--%3E%0A%20%20%3Cg%20transform%3D%22translate%281520%20480%29%22%20opacity%3D%220.85%22%3E%0A%20%20%20%20%3Ccircle%20r%3D%22200%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.55%22%20stroke%3D%22%23ebe3d4%22%20stroke-width%3D%221%22/%3E%0A%20%20%20%20%3Ccircle%20r%3D%22160%22%20fill%3D%22none%22%20stroke%3D%22%23e8dcc6%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%224%206%22/%3E%0A%20%20%20%20%3Ccircle%20r%3D%22120%22%20fill%3D%22none%22%20stroke%3D%22%23ddd0b8%22%20stroke-width%3D%220.6%22/%3E%0A%20%20%20%20%3Cg%20stroke%3D%22%23cfc3ad%22%20stroke-width%3D%220.9%22%20opacity%3D%220.75%22%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22-140%22%20y1%3D%22-60%22%20x2%3D%2280%22%20y2%3D%2240%22/%3E%3Cline%20x1%3D%22-100%22%20y1%3D%22100%22%20x2%3D%22120%22%20y2%3D%22-30%22/%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22-60%22%20y1%3D%22-120%22%20x2%3D%2260%22%20y2%3D%2290%22/%3E%3Cline%20x1%3D%2230%22%20y1%3D%22-140%22%20x2%3D%22-80%22%20y2%3D%2270%22/%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22140%22%20y1%3D%2220%22%20x2%3D%22-120%22%20y2%3D%22-80%22/%3E%3Cline%20x1%3D%22100%22%20y1%3D%22-100%22%20x2%3D%22-40%22%20y2%3D%22130%22/%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22-160%22%20y1%3D%2220%22%20x2%3D%22140%22%20y2%3D%2260%22/%3E%3Cline%20x1%3D%220%22%20y1%3D%22-160%22%20x2%3D%220%22%20y2%3D%22150%22/%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22-80%22%20y1%3D%22140%22%20x2%3D%2290%22%20y2%3D%22-110%22/%3E%3Cline%20x1%3D%22160%22%20y1%3D%22-40%22%20x2%3D%22-90%22%20y2%3D%22100%22/%3E%0A%20%20%20%20%3C/g%3E%0A%20%20%20%20%3Cg%20fill%3D%22%23e5dcc8%22%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22-140%22%20cy%3D%22-60%22%20r%3D%226%22/%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2240%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%22-100%22%20cy%3D%22100%22%20r%3D%225%22/%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22120%22%20cy%3D%22-30%22%20r%3D%226%22/%3E%3Ccircle%20cx%3D%22-60%22%20cy%3D%22-120%22%20r%3D%224%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2290%22%20r%3D%225%22/%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%22-140%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%22-80%22%20cy%3D%2270%22%20r%3D%226%22/%3E%3Ccircle%20cx%3D%22140%22%20cy%3D%2220%22%20r%3D%224%22/%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22-120%22%20cy%3D%22-80%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22-100%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%22-40%22%20cy%3D%22130%22%20r%3D%226%22/%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22-160%22%20cy%3D%2220%22%20r%3D%224%22/%3E%3Ccircle%20cx%3D%22140%22%20cy%3D%2260%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%22-160%22%20r%3D%225%22/%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%22150%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%22-80%22%20cy%3D%22140%22%20r%3D%226%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%22-110%22%20r%3D%225%22/%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22160%22%20cy%3D%22-40%22%20r%3D%224%22/%3E%3Ccircle%20cx%3D%22-90%22%20cy%3D%22100%22%20r%3D%225%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%228%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23d9cdb5%22%20stroke-width%3D%221.5%22/%3E%0A%20%20%20%20%3C/g%3E%0A%20%20%3C/g%3E%0A%0A%20%20%3C%21--%20transformer%20layers%20--%3E%0A%20%20%3Cg%20transform%3D%22translate%281180%20620%29%22%20opacity%3D%220.5%22%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22120%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23e5dcc8%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2220%22%20y%3D%2248%22%20width%3D%22120%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23faf6eb%22%20stroke%3D%22%23e5dcc8%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2240%22%20y%3D%2296%22%20width%3D%22120%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23f5efe3%22%20stroke%3D%22%23ddd2bc%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2260%22%20y%3D%22144%22%20width%3D%22120%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23f0e9da%22%20stroke%3D%22%23d4c9b4%22/%3E%0A%20%20%20%20%3Ctext%20x%3D%228%22%20y%3D%2218%22%20font-family%3D%22ui-monospace%2C%20monospace%22%20font-size%3D%2210%22%20fill%3D%22%23b8aa92%22%3Einput%3C/text%3E%0A%20%20%20%20%3Ctext%20x%3D%2228%22%20y%3D%2266%22%20font-family%3D%22ui-monospace%2C%20monospace%22%20font-size%3D%2210%22%20fill%3D%22%23b8aa92%22%3Ehidden%3C/text%3E%0A%20%20%20%20%3Ctext%20x%3D%2248%22%20y%3D%22114%22%20font-family%3D%22ui-monospace%2C%20monospace%22%20font-size%3D%2210%22%20fill%3D%22%23b8aa92%22%3Eattention%3C/text%3E%0A%20%20%20%20%3Ctext%20x%3D%2268%22%20y%3D%22162%22%20font-family%3D%22ui-monospace%2C%20monospace%22%20font-size%3D%2210%22%20fill%3D%22%23b8aa92%22%3Eoutput%3C/text%3E%0A%20%20%3C/g%3E%0A%0A%20%20%3C%21--%20flowing%20connections%20--%3E%0A%20%20%3Cg%20opacity%3D%220.55%22%20stroke-linecap%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M1080%20400%20C1200%20360%2C%201280%20340%2C%201380%20340%22%20stroke%3D%22%23d9cdb5%22%20stroke-width%3D%221.2%22%20fill%3D%22none%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M1380%20412%20C1450%20440%2C%201480%20460%2C%201520%20480%22%20stroke%3D%22%23cfc3ad%22%20stroke-width%3D%221%22%20fill%3D%22none%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M1200%20620%20C1280%20580%2C%201340%20520%2C%201380%20412%22%20stroke%3D%22%23e0d6c4%22%20stroke-width%3D%220.9%22%20fill%3D%22none%22%20stroke-dasharray%3D%226%204%22/%3E%0A%20%20%3C/g%3E%0A%0A%20%20%3Cg%20opacity%3D%220.35%22%20font-family%3D%22ui-monospace%2C%20monospace%22%20font-size%3D%2210%22%20fill%3D%22%23c4b59a%22%3E%0A%20%20%20%20%3Ctext%20x%3D%221280%22%20y%3D%22180%22%3E01%3C/text%3E%3Ctext%20x%3D%221320%22%20y%3D%22180%22%3E10%3C/text%3E%3Ctext%20x%3D%221360%22%20y%3D%22180%22%3E11%3C/text%3E%0A%20%20%20%20%3Ctext%20x%3D%221680%22%20y%3D%22720%22%3ELLM%3C/text%3E%3Ctext%20x%3D%221720%22%20y%3D%22760%22%3ERAG%3C/text%3E%3Ctext%20x%3D%221640%22%20y%3D%22800%22%3EAgent%3C/text%3E%0A%20%20%3C/g%3E%0A%0A%20%20%3Crect%20width%3D%221920%22%20height%3D%221080%22%20fill%3D%22url%28%23leftFade%29%22/%3E%0A%3C/svg%3E%0A" alt="" decoding="async">
+    <div class="hero__shade" aria-hidden="true"></div>
+    <div class="hero__inner">
+      <h1 class="hero__title">AI Weekly Digest</h1>
+      <p class="hero__subtitle">Intelligence Clipboard.</p>
+      <p class="hero__meta" id="meta-line">精选 14 条重大更新 · 2026-05-21 ~ 2026-05-28</p>
+      <div class="hero-search-wrap" id="hero-search-wrap">
+        <input type="search" id="search-input" class="hero-search"
+          placeholder="热点搜索" autocomplete="off"
+          oninput="onSearchInput()" onkeydown="onSearchKeydown(event)" onfocus="onSearchFocus()" onblur="onSearchBlur()">
+        <span class="hero-search-ghost" id="search-ghost" aria-hidden="true"></span>
+      </div>
+    </div>
+  </header>
+
+  <main id="content-area"></main>
+
+  <footer class="site-footer">数据内联 · 双击即可离线浏览</footer>
+</div>
+
+<script id="dashboard-data" type="application/json">
+{
+  "meta": {
+    "generated_at": "2026-05-28",
+    "period": "2026-05-21 ~ 2026-05-28",
+    "window_days": 8,
+    "total": 14,
+    "definition": "近 8 天（含今天，自 5/21 起）对 AI 行业/工具有实质影响的重大更新，含模型、Agent、API、协议、国内工具与太空算力基础设施。"
+  },
+  "items": [
+    {
+      "title": "国产 Agent 模型闯入全球第一梯队，限时免费开放",
+      "url": "https://www.qbitai.com/2026/05/424851.html",
+      "summary": "量子位报道国产 Agent 模型在多项基准上进入全球第一梯队，并开启限时免费策略，反映国内模型在 Agent 场景的产品化提速。",
+      "source": "qbitai",
+      "date": "2026-05-26",
+      "is_domestic": true,
+      "vendor": "Moonshot",
+      "tool": "Kimi",
+      "tools": [
+        "Kimi",
+        "Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80",
+      "score": 54,
+      "short_title": "国产 Agent 模型闯入全球第一梯队，限时免费开放",
+      "short_summary": "在近7天窗口内（截至2026-05-26），国产Agent模型闯入全球第一梯队，限时免费开放成为Kimi领域的重要动态，技术焦点涵盖Agent、产品更新。量子位报道国产Agent模型在多项基准上进入全球第一梯队，并开启限时免费策略，反映国内模型在Agent场景的产品化提速。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-26），国产Agent模型闯入全球第一梯队，限时免费开放成为Kimi领域的重要动态，技术焦点涵盖Agent、产品更新。量子位报道国产Agent模型在多项基准上进入全球第一梯队，并开启限时免费策略，反映国内模型在Agent场景的产品化提速。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://www.qbitai.com/2026/05/424851.html\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：量子位</a></p>",
+      "insight": "Kimi 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "1",
+      "tags": [
+        "Agent",
+        "产品更新"
+      ]
+    },
+    {
+      "title": "Moonshot 发布 Kimi Code：面向下一代 Agent 的开源开发框架",
+      "url": "https://github.com/MoonshotAI/kimi-code",
+      "summary": "Kimi Code 作为 Moonshot 开源 Agent 开发入口，强调可组合的 coding/agent 工作流，便于团队快速搭建生产级 Agent。",
+      "source": "curated",
+      "date": "2026-05-22",
+      "is_domestic": true,
+      "vendor": "Moonshot",
+      "tool": "Kimi",
+      "tools": [
+        "Kimi",
+        "Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "代码能力",
+        "开源生态"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&q=80",
+      "score": 71,
+      "short_title": "Moonshot 发布 Kimi Code：面向下一代 Agent 的开源开发框架",
+      "short_summary": "在近7天窗口内（截至2026-05-22），Moonshot发布Kimi Code：面向下一代Agent的开源开发框架成为Kimi领域的重要动态，技术焦点涵盖Agent、代码能力、开源生态。Kimi Code作为Moonshot开源Agent开发入口，强调可组合的coding/agent工作流，便于团队快速搭建生产级Agent。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），Moonshot发布Kimi Code：面向下一代Agent的开源开发框架成为Kimi领域的重要动态，技术焦点涵盖Agent、代码能力、开源生态。Kimi Code作为Moonshot开源Agent开发入口，强调可组合的coding/agent工作流，便于团队快速搭建生产级Agent。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://github.com/MoonshotAI/kimi-code\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：行业报道</a></p>",
+      "insight": "Kimi 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "2",
+      "tags": [
+        "Agent",
+        "代码能力",
+        "开源生态"
+      ]
+    },
+    {
+      "title": "SpaceX IPO 文件将公司重新定义为 AI 基础设施平台，规划轨道 AI 算力卫星",
+      "url": "https://www.datacenterknowledge.com/build-design/spacex-ipo-filing-recasts-company-as-ai-infrastructure-giant",
+      "summary": "SpaceX 在 S-1 中披露 Colossus 训练集群、Starlink 光网与轨道 AI 计算卫星计划，最早 2028 年部署，以绕开地面电力与散热瓶颈。",
+      "source": "curated",
+      "date": "2026-05-21",
+      "is_domestic": false,
+      "vendor": "SpaceX",
+      "tool": "太空算力",
+      "tools": [
+        "太空算力",
+        "行业动态"
+      ],
+      "tech_points": [
+        "太空算力",
+        "算力基础设施"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://eu-images.contentstack.com/v3/assets/blt8eb3cdfc1fce5194/blta9c50c0ad2edeecd/6a0f028ae41d5891a915bc4e/a13_falcon9image.jpg?disable=upscale&width=1200&height=630&fit=crop",
+      "score": 75,
+      "short_title": "SpaceX IPO 文件将公司重新定义为 AI 基础设施平台，规划轨道 AI 算力卫星",
+      "short_summary": "在近7天窗口内（截至2026-05-21），SpaceX IPO文件将公司重新定义为AI基础设施平台，规划轨道AI算力卫星成为太空算力领域的重要动态，技术焦点涵盖太空算力、算力基础设施。SpaceX在 S-1 中披露Colossus训练集群、Starlink光网与轨道AI计算卫星计划，最早2028年部署，以绕开地面电力与散热瓶颈。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-21），SpaceX IPO文件将公司重新定义为AI基础设施平台，规划轨道AI算力卫星成为太空算力领域的重要动态，技术焦点涵盖太空算力、算力基础设施。SpaceX在 S-1 中披露Colossus训练集群、Starlink光网与轨道AI计算卫星计划，最早2028年部署，以绕开地面电力与散热瓶颈。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。 <a href=\"https://www.datacenterknowledge.com/build-design/spacex-ipo-filing-recasts-company-as-ai-infrastructure-giant\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：行业报道</a></p>",
+      "insight": "这标志着 AI 竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "id": "3",
+      "tags": [
+        "太空算力",
+        "算力基础设施"
+      ]
+    },
+    {
+      "title": "SpaceX Starship V3 首飞基本完成：部署载荷并实现受控溅落",
+      "url": "https://arstechnica.com/space/2026/05/spacexs-starship-v3-still-a-work-in-progress-mostly-successful-on-first-flight/",
+      "summary": "Starship V3 于 5 月 22 日从得州 Starbase 执行 Flight 12 试飞，部署约 22 个载荷并实现印度洋受控溅落；助推器返场阶段仍有问题，但社区普遍将其与轨道数据中心与太空算力基础设施路线联系起来。",
+      "source": "curated",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "SpaceX",
+      "tool": "太空算力",
+      "tools": [
+        "太空算力",
+        "行业动态"
+      ],
+      "tech_points": [
+        "太空算力",
+        "算力基础设施"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80",
+      "score": 75,
+      "short_title": "SpaceX Starship V3 首飞基本完成：部署载荷并实现受控溅落",
+      "short_summary": "在近7天窗口内（截至2026-05-22），SpaceX Starship V3 首飞基本完成：部署载荷并实现受控溅落成为太空算力领域的重要动态，技术焦点涵盖太空算力、算力基础设施。Starship V3 于 5 月 22 日从得州Starbase执行Flight 12 试飞，部署约 22 个载荷并实现印度洋受控溅落；助推器返场阶段仍有问题，但社区普遍将其与轨道数据中心与太空算力基础设施路线联系起来。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），SpaceX Starship V3 首飞基本完成：部署载荷并实现受控溅落成为太空算力领域的重要动态，技术焦点涵盖太空算力、算力基础设施。Starship V3 于 5 月 22 日从得州Starbase执行Flight 12 试飞，部署约 22 个载荷并实现印度洋受控溅落；助推器返场阶段仍有问题，但社区普遍将其与轨道数据中心与太空算力基础设施路线联系起来。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。 <a href=\"https://arstechnica.com/space/2026/05/spacexs-starship-v3-still-a-work-in-progress-mostly-successful-on-first-flight/\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：行业报道</a></p>",
+      "insight": "这标志着 AI 竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "id": "4",
+      "tags": [
+        "太空算力",
+        "算力基础设施"
+      ]
+    },
+    {
+      "title": "华为发布 AI DC 数据基础设施全栈方案，加速行业智能化跃升",
+      "url": "https://www.qbitai.com/2026/05/425296.html",
+      "summary": "华为在巴黎创新数据基础设施论坛发布 AI DC 全栈方案，覆盖数据湖、知识与记忆平台、模型工程、Agent 框架与数据韧性，助力企业 AI 规模化落地。",
+      "source": "qbitai",
+      "date": "2026-05-26",
+      "is_domestic": true,
+      "vendor": "华为",
+      "tool": "行业动态",
+      "tools": [
+        "行业动态",
+        "Agent"
+      ],
+      "tech_points": [
+        "算力基础设施",
+        "Agent",
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
+      "score": 48,
+      "short_title": "华为发布 AI DC 数据基础设施全栈方案，加速行业智能化跃升",
+      "short_summary": "在近7天窗口内（截至2026-05-26），华为发布AI DC数据基础设施全栈方案，加速行业智能化跃升成为行业动态领域的重要动态，技术焦点涵盖算力基础设施、Agent、产品更新。华为在巴黎创新数据基础设施论坛发布AI DC全栈方案，覆盖数据湖、知识与记忆平台、模型工程、Agent框架与数据韧性，助力企业AI规模化落地。Insight：行业动态本次更新直接影响算力基础设施能力边界，建议关注其API/定价/企业版落地节奏。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-26），华为发布AI DC数据基础设施全栈方案，加速行业智能化跃升成为行业动态领域的重要动态，技术焦点涵盖算力基础设施、Agent、产品更新。华为在巴黎创新数据基础设施论坛发布AI DC全栈方案，覆盖数据湖、知识与记忆平台、模型工程、Agent框架与数据韧性，助力企业AI规模化落地。Insight：行业动态本次更新直接影响算力基础设施能力边界，建议关注其API/定价/企业版落地节奏。 <a href=\"https://www.qbitai.com/2026/05/425296.html\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：量子位</a></p>",
+      "insight": "行业动态 本次更新直接影响 算力基础设施 能力边界，建议关注其 API/定价/企业版落地节奏。",
+      "id": "5",
+      "tags": [
+        "算力基础设施",
+        "Agent",
+        "产品更新"
+      ]
+    },
+    {
+      "title": "OpenAI, Grupo Folha and Grupo UOL announce strategic content partnership",
+      "url": "https://openai.com/index/grupo-folha-grupo-uol-partnership",
+      "summary": "OpenAI partners with Grupo Folha and Grupo UOL to bring trusted Brazilian journalism to ChatGPT, expanding access to news with attribution and transparency.",
+      "source": "openai_news",
+      "date": "2026-05-25",
+      "is_domestic": false,
+      "vendor": "OpenAI",
+      "tool": "OpenAI",
+      "tools": [
+        "OpenAI"
+      ],
+      "tech_points": [
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.ctfassets.net/kftzwdyauwt9/5r2QUTvY5Zjg2vjOFVqbFA/63060b11739247750d8eabb3d029e7ae/Grup-SEO-Image.png?w=1600&h=900&fit=fill",
+      "score": 71,
+      "short_title": "OpenAI, Grupo Folha and Grupo UOL announce strategic cont…",
+      "short_summary": "在近7天窗口内（截至2026-05-25），OpenAI, Grupo Folha and Grupo UOL announce strategic content partnership成为OpenAI领域的重要动态，技术焦点涵盖产品更新。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-25），OpenAI, Grupo Folha and Grupo UOL announce strategic content partnership成为OpenAI领域的重要动态，技术焦点涵盖产品更新。 <a href=\"https://openai.com/index/grupo-folha-grupo-uol-partnership\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "OpenAI 本次更新直接影响 产品更新 能力边界，建议关注其 API/定价/企业版落地节奏。",
+      "id": "6",
+      "tags": [
+        "产品更新"
+      ]
+    },
+    {
+      "title": "I think Anthropic and OpenAI have found product-market fit",
+      "url": "https://simonwillison.net/2026/May/27/product-market-fit/",
+      "summary": "Article URL: https://simonwillison.net/2026/May/27/product-market-fit/ Comments URL: https://news.ycombinator.com/item?id=48296794 Points: 724 # Comments: 896",
+      "source": "hn_ai",
+      "date": "2026-05-27",
+      "is_domestic": false,
+      "vendor": "OpenAI",
+      "tool": "OpenAI",
+      "tools": [
+        "OpenAI"
+      ],
+      "tech_points": [
+        "产品更新"
+      ],
+      "hn_points": 724,
+      "hn_comments": 896,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80",
+      "score": 64,
+      "short_title": "I think Anthropic and OpenAI have found product-market fit",
+      "short_summary": "在近7天窗口内（截至2026-05-27），I think Anthropic and OpenAI have found product-market fit成为OpenAI领域的重要动态，技术焦点涵盖产品更新。围绕「I think Anthropic and OpenAI have found product-market fit」的讨论在Hacker News获得 724 热度分、896 条评论。社区主要关注OpenAI在产品更新场景中的可用性、成本与落地路径。Insight：OpenAI本次更新直接影响产品更新能力边界，建议关注其API/定价/企业版落地节奏。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-27），I think Anthropic and OpenAI have found product-market fit成为OpenAI领域的重要动态，技术焦点涵盖产品更新。围绕「I think Anthropic and OpenAI have found product-market fit」的讨论在Hacker News获得 724 热度分、896 条评论。社区主要关注OpenAI在产品更新场景中的可用性、成本与落地路径。Insight：OpenAI本次更新直接影响产品更新能力边界，建议关注其API/定价/企业版落地节奏。 <a href=\"https://simonwillison.net/2026/May/27/product-market-fit/\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "OpenAI 本次更新直接影响 产品更新 能力边界，建议关注其 API/定价/企业版落地节奏。",
+      "id": "7",
+      "tags": [
+        "产品更新"
+      ]
+    },
+    {
+      "title": "Microsoft starts canceling Claude Code licenses",
+      "url": "https://www.theverge.com/tech/930447/microsoft-claude-code-discontinued-notepad",
+      "summary": "https://archive.ph/WfCta Comments URL: https://news.ycombinator.com/item?id=48238896 Points: 489 # Comments: 465",
+      "source": "hn_ai",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "Claude",
+      "tool": "Claude",
+      "tools": [
+        "Claude"
+      ],
+      "tech_points": [
+        "代码能力"
+      ],
+      "hn_points": 489,
+      "hn_comments": 465,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1200&q=80",
+      "score": 64,
+      "short_title": "Microsoft starts canceling Claude Code licenses",
+      "short_summary": "在近7天窗口内（截至2026-05-22），Microsoft starts canceling Claude Code licenses成为Claude领域的重要动态，技术焦点涵盖代码能力。围绕「Microsoft starts canceling Claude Code licenses」的讨论在Hacker News获得 489 热度分、465 条评论。社区主要关注Claude在代码能力场景中的可用性、成本与落地路径。Insight：Claude在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），Microsoft starts canceling Claude Code licenses成为Claude领域的重要动态，技术焦点涵盖代码能力。围绕「Microsoft starts canceling Claude Code licenses」的讨论在Hacker News获得 489 热度分、465 条评论。社区主要关注Claude在代码能力场景中的可用性、成本与落地路径。Insight：Claude在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://www.theverge.com/tech/930447/microsoft-claude-code-discontinued-notepad\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "Claude 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "8",
+      "tags": [
+        "代码能力"
+      ]
+    },
+    {
+      "title": "DeepSeek makes the V4 Pro price discount permanent",
+      "url": "https://api-docs.deepseek.com/quick_start/pricing",
+      "summary": "> (3) The deepseek-v4-pro model API pricing will be officially adjusted to 1/4 of the original price after the 75% discount promotion ends on 2026/05/31 15:59 UTC.https://x.com/deepseek_ai/status/2057854261699195173Related ongoing thread:DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost - https://news.ycombinator.com/item?id=48256953 - May 2026 (135 comments) Comments URL: https://news.ycombinator.com/item?id=48237663 Points: 618 # Comments: 546",
+      "source": "hn_ai",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "DeepSeek",
+      "tool": "DeepSeek",
+      "tools": [
+        "DeepSeek",
+        "Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "API",
+        "代码能力",
+        "推理能力"
+      ],
+      "hn_points": 618,
+      "hn_comments": 546,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80",
+      "score": 64,
+      "short_title": "DeepSeek makes the V4 Pro price discount permanent",
+      "short_summary": "在近7天窗口内（截至2026-05-22），DeepSeek makes the V4 Pro price discount permanent成为DeepSeek领域的重要动态，技术焦点涵盖Agent、API、代码能力、推理能力。围绕「DeepSeek makes the V4 Pro price discount permanent」的讨论在Hacker News获得 618 热度分、546 条评论。社区主要关注DeepSeek在Agent、API、代码能力、推理能力场景中的可用性、成本与落地路径。Insight：DeepSeek在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），DeepSeek makes the V4 Pro price discount permanent成为DeepSeek领域的重要动态，技术焦点涵盖Agent、API、代码能力、推理能力。围绕「DeepSeek makes the V4 Pro price discount permanent」的讨论在Hacker News获得 618 热度分、546 条评论。社区主要关注DeepSeek在Agent、API、代码能力、推理能力场景中的可用性、成本与落地路径。Insight：DeepSeek在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://api-docs.deepseek.com/quick_start/pricing\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "DeepSeek 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "9",
+      "tags": [
+        "Agent",
+        "API",
+        "代码能力",
+        "推理能力"
+      ]
+    },
+    {
+      "title": "DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost",
+      "url": "https://esengine.github.io/DeepSeek-Reasonix/",
+      "summary": "Related ongoing thread:DeepSeek makes the V4 Pro price discount permanent - https://news.ycombinator.com/item?id=48237663 - May 2026 (384 comments) Comments URL: https://news.ycombinator.com/item?id=48256953 Points: 724 # Comments: 283",
+      "source": "hn_ai",
+      "date": "2026-05-24",
+      "is_domestic": false,
+      "vendor": "DeepSeek",
+      "tool": "DeepSeek",
+      "tools": [
+        "DeepSeek",
+        "Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "代码能力",
+        "推理能力"
+      ],
+      "hn_points": 724,
+      "hn_comments": 283,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80",
+      "score": 63,
+      "short_title": "DeepSeek reasonix, DeepSeek native coding agent with high…",
+      "short_summary": "在近7天窗口内（截至2026-05-24），DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost成为DeepSeek领域的重要动态，技术焦点涵盖Agent、代码能力、推理能力。围绕「DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost」的讨论在Hacker News获得 724 热度分、283 条评论。社区主要关注DeepSeek在Agent、代码能力、推理能力场景中的可用性、成本与落地路径。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-24），DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost成为DeepSeek领域的重要动态，技术焦点涵盖Agent、代码能力、推理能力。围绕「DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost」的讨论在Hacker News获得 724 热度分、283 条评论。社区主要关注DeepSeek在Agent、代码能力、推理能力场景中的可用性、成本与落地路径。 <a href=\"https://esengine.github.io/DeepSeek-Reasonix/\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "DeepSeek 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "10",
+      "tags": [
+        "Agent",
+        "代码能力",
+        "推理能力"
+      ]
+    },
+    {
+      "title": "Claude Code as a Daily Driver: Claude.md, Skills, Subagents, Plugins, and MCPs",
+      "url": "https://arps18.github.io/posts/claude-code-mastery/",
+      "summary": "Article URL: https://arps18.github.io/posts/claude-code-mastery/ Comments URL: https://news.ycombinator.com/item?id=48289950 Points: 386 # Comments: 230",
+      "source": "hn_ai",
+      "date": "2026-05-27",
+      "is_domestic": false,
+      "vendor": "Claude",
+      "tool": "Claude",
+      "tools": [
+        "Claude",
+        "MCP",
+        "Agent"
+      ],
+      "tech_points": [
+        "MCP",
+        "Agent",
+        "代码能力"
+      ],
+      "hn_points": 386,
+      "hn_comments": 230,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80",
+      "score": 61,
+      "short_title": "Claude Code as a Daily Driver: Claude.md, Skills, Subagen…",
+      "short_summary": "在近7天窗口内（截至2026-05-27），Claude Code as a Daily Driver: Claude.md, Skills, Subagents, Plugins, and MCPs成为Claude领域的重要动态，技术焦点涵盖MCP、Agent、代码能力。围绕「Claude Code as a Daily Driver: Claude.md, Skills, Subagents, Plugins, and MCPs」的讨论在Hacker News获得 386 热度分、230 条评论。社区主要关注Claude在MCP、Agent、代码能力场景中的可用性、成本与落地路径。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-27），Claude Code as a Daily Driver: Claude.md, Skills, Subagents, Plugins, and MCPs成为Claude领域的重要动态，技术焦点涵盖MCP、Agent、代码能力。围绕「Claude Code as a Daily Driver: Claude.md, Skills, Subagents, Plugins, and MCPs」的讨论在Hacker News获得 386 热度分、230 条评论。社区主要关注Claude在MCP、Agent、代码能力场景中的可用性、成本与落地路径。 <a href=\"https://arps18.github.io/posts/claude-code-mastery/\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "Claude 正在把 Agent 从单点对话推进到可编排工具链，企业落地会先看协议生态与权限治理是否成熟。",
+      "id": "11",
+      "tags": [
+        "MCP",
+        "Agent",
+        "代码能力"
+      ]
+    },
+    {
+      "title": "Cisco and OpenAI redefine enterprise engineering with Codex",
+      "url": "https://openai.com/index/cisco",
+      "summary": "Cisco and OpenAI are redefining enterprise engineering with Codex, helping Cisco scale AI-native development, accelerate AI Defense work, and automate defect remediation.",
+      "source": "openai_news",
+      "date": "2026-05-27",
+      "is_domestic": false,
+      "vendor": "Codex",
+      "tool": "Codex",
+      "tools": [
+        "Codex",
+        "OpenAI"
+      ],
+      "tech_points": [
+        "代码能力"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.ctfassets.net/kftzwdyauwt9/6biPCt1l6a2vedPJey5inM/67b80b0750688b948c1fd9b9427cccbd/oai_Cisco_SEO.png?w=1600&h=900&fit=fill",
+      "score": 57,
+      "short_title": "Cisco and OpenAI redefine enterprise engineering with Cod…",
+      "short_summary": "在近7天窗口内（截至2026-05-27），Cisco and OpenAI redefine enterprise engineering with Codex成为Codex领域的重要动态，技术焦点涵盖代码能力。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-27），Cisco and OpenAI redefine enterprise engineering with Codex成为Codex领域的重要动态，技术焦点涵盖代码能力。 <a href=\"https://openai.com/index/cisco\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "Codex 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "12",
+      "tags": [
+        "代码能力"
+      ]
+    },
+    {
+      "title": "Building self-improving tax agents with Codex",
+      "url": "https://openai.com/index/building-self-improving-tax-agents-with-codex",
+      "summary": "See how OpenAI, Thrive, and Crete built a self-improving tax agent with Codex, automating filings, improving accuracy, and accelerating workflows.",
+      "source": "openai_news",
+      "date": "2026-05-27",
+      "is_domestic": false,
+      "vendor": "Codex",
+      "tool": "Codex",
+      "tools": [
+        "Codex",
+        "OpenAI",
+        "Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "代码能力"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.ctfassets.net/kftzwdyauwt9/3upo248JfOrgp0fahNLrkt/10f9e23a8be06e38fb21d29faf5e320d/SEO.png?w=1600&h=900&fit=fill",
+      "score": 57,
+      "short_title": "Building self-improving tax agents with Codex",
+      "short_summary": "在近7天窗口内（截至2026-05-27），Building self-improving tax agents with Codex成为Codex领域的重要动态，技术焦点涵盖Agent、代码能力。据OpenAI披露：See how OpenAI, Thrive, and Crete built a self-improving tax agent with Codex, automating filings, improving accuracy, and accelerating workflows.Insight：Codex在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-27），Building self-improving tax agents with Codex成为Codex领域的重要动态，技术焦点涵盖Agent、代码能力。据OpenAI披露：See how OpenAI, Thrive, and Crete built a self-improving tax agent with Codex, automating filings, improving accuracy, and accelerating workflows.Insight：Codex在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://openai.com/index/building-self-improving-tax-agents-with-codex\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "Codex 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "13",
+      "tags": [
+        "Agent",
+        "代码能力"
+      ]
+    },
+    {
+      "title": "1400亿Agent入场，“流量”这条护城河要塌了",
+      "url": "https://www.qbitai.com/2026/05/425881.html",
+      "summary": "看到大厂押注Agent生态的新方向",
+      "source": "qbitai",
+      "date": "2026-05-27",
+      "is_domestic": true,
+      "vendor": "AI Agent",
+      "tool": "Agent",
+      "tools": [
+        "Agent"
+      ],
+      "tech_points": [
+        "Agent"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "image_url": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1200&q=80",
+      "score": 54,
+      "short_title": "1400亿Agent入场，“流量”这条护城河要塌了",
+      "short_summary": "在近7天窗口内（截至2026-05-27），1400亿Agent入场，“流量”这条护城河要塌了成为Agent领域的重要动态，技术焦点涵盖Agent。看到大厂押注Agent生态的新方向Insight：Agent在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-27），1400亿Agent入场，“流量”这条护城河要塌了成为Agent领域的重要动态，技术焦点涵盖Agent。看到大厂押注Agent生态的新方向Insight：Agent在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://www.qbitai.com/2026/05/425881.html\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：量子位</a></p>",
+      "insight": "Agent 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "14",
+      "tags": [
+        "Agent"
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+const ALL_TOOL_FILTERS = ["OpenAI", "Codex", "Claude", "Gemini", "DeepSeek", "Kimi", "Qwen", "通义", "文心", "豆包", "Cursor", "Copilot", "MCP", "Agent", "太空算力", "行业动态"];
+
+const payload = JSON.parse(document.getElementById('dashboard-data').textContent);
+const allItems = payload.items || [];
+const meta = payload.meta || {};
+
+let activeDate = 'all';
+let activeRegion = 'all';
+let activeTool = 'all';
+let activeTags = new Set();
+let searchQuery = '';
+let isFirstRender = true;
+let scrollTimer = null;
+let lastSearchValue = '';
+let openPanelId = null;
+
+const panelSearch = document.getElementById('panel-search');
+const panelFilter = document.getElementById('panel-filter');
+const overlay = document.getElementById('overlay');
+const btnSearch = document.getElementById('btn-search');
+const btnFilter = document.getElementById('btn-filter');
+const searchInput = document.getElementById('search-input');
+const searchInputSide = document.getElementById('search-input-side');
+
+function openSearchPanel() {
+  closePanels();
+  openPanelId = 'search';
+  panelSearch.classList.add('is-open');
+  panelSearch.setAttribute('aria-hidden', 'false');
+  btnSearch.classList.add('is-active');
+  btnSearch.setAttribute('aria-expanded', 'true');
+  overlay.classList.add('is-visible');
+  overlay.setAttribute('aria-hidden', 'false');
+  searchInputSide.value = searchInput.value;
+  setTimeout(() => searchInputSide.focus(), 320);
+}
+
+function openFilterPanel() {
+  closePanels();
+  openPanelId = 'filter';
+  panelFilter.classList.add('is-open');
+  panelFilter.setAttribute('aria-hidden', 'false');
+  btnFilter.classList.add('is-active');
+  btnFilter.setAttribute('aria-expanded', 'true');
+  overlay.classList.add('is-visible');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closePanels() {
+  openPanelId = null;
+  panelSearch.classList.remove('is-open');
+  panelFilter.classList.remove('is-open');
+  panelSearch.setAttribute('aria-hidden', 'true');
+  panelFilter.setAttribute('aria-hidden', 'true');
+  btnSearch.classList.remove('is-active');
+  btnFilter.classList.remove('is-active');
+  btnSearch.setAttribute('aria-expanded', 'false');
+  btnFilter.setAttribute('aria-expanded', 'false');
+  overlay.classList.remove('is-visible');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+btnSearch.addEventListener('click', () => {
+  if (openPanelId === 'search') closePanels();
+  else openSearchPanel();
+});
+
+btnFilter.addEventListener('click', () => {
+  if (openPanelId === 'filter') closePanels();
+  else openFilterPanel();
+});
+
+overlay.addEventListener('click', closePanels);
+document.querySelectorAll('[data-close-panel]').forEach(btn => {
+  btn.addEventListener('click', closePanels);
+});
+
+function syncSearchFromHero() {
+  searchInputSide.value = searchInput.value;
+  lastSearchValue = searchInput.value;
+  applyFilters({ scroll: false });
+}
+
+function syncSearchFromSide() {
+  searchInput.value = searchInputSide.value;
+  lastSearchValue = searchInputSide.value;
+  applyFilters({ scroll: false });
+}
+
+searchInputSide.addEventListener('input', syncSearchFromSide);
+searchInputSide.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchInput.value = searchInputSide.value;
+    searchQuery = searchInput.value;
+    applyFilters({ scroll: true });
+    closePanels();
+  }
+});
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatCardDate(dateStr) {
+  if (!dateStr) return '';
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                  'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const y = parts[0];
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  if (!m || !d) return dateStr;
+  return `${months[m - 1]} ${d}, ${y}`;
+}
+
+function cardExcerpt(item) {
+  let text = item.short_summary || item.summary || '';
+  text = text.replace(/^在近\d+天[^，]*，/, '');
+  text = text.replace(/Insight[：:].*$/s, '');
+  return text.trim();
+}
+
+function normalizeImageUrl(url) {
+  if (!url) return '';
+  return String(url).replace(/&amp;/g, '&').trim();
+}
+
+function hasDisplayImage(item) {
+  return !!normalizeImageUrl(item.image_url);
+}
+
+function buildSearchPhrases() {
+  const seen = new Set();
+  const phrases = [];
+  allItems.forEach(i => {
+    let t = (i.short_title || i.title || '').replace(/…/g, '').trim();
+    if (t.length > 32) t = t.slice(0, 32) + '…';
+    if (t.length >= 4 && !seen.has(t)) {
+      seen.add(t);
+      phrases.push(t);
+    }
+  });
+  if (phrases.length < 4) {
+    ['OpenAI Codex', 'Claude API', 'Gemini', 'DeepSeek', 'Cursor Agent', 'MCP'].forEach(p => {
+      if (!seen.has(p)) phrases.push(p);
+    });
+  }
+  return phrases.slice(0, 12);
+}
+
+let searchAnimPhrases = [];
+let searchAnimPhraseIdx = 0;
+let searchAnimCharIdx = 0;
+let searchAnimDeleting = false;
+let searchAnimPaused = false;
+let searchAnimTimer = null;
+
+const SEARCH_PREFIX = '热点搜索 · ';
+
+function updateSearchWrapState() {
+  const wrap = document.getElementById('hero-search-wrap');
+  const input = document.getElementById('search-input');
+  if (!wrap || !input) return;
+  const hasVal = !!input.value.trim();
+  wrap.classList.toggle('has-value', hasVal);
+  wrap.classList.toggle('is-typing', !hasVal && !searchAnimPaused);
+}
+
+function setSearchGhost(text) {
+  const ghost = document.getElementById('search-ghost');
+  if (ghost) ghost.textContent = text;
+}
+
+function tickSearchAnimation() {
+  const input = document.getElementById('search-input');
+  if (!input || input.value.trim() || searchAnimPaused) {
+    updateSearchWrapState();
+    return;
+  }
+  if (!searchAnimPhrases.length) searchAnimPhrases = buildSearchPhrases();
+  const phrase = searchAnimPhrases[searchAnimPhraseIdx % searchAnimPhrases.length];
+  const full = SEARCH_PREFIX + phrase;
+
+  if (!searchAnimDeleting) {
+    searchAnimCharIdx += 1;
+    setSearchGhost(full.slice(0, searchAnimCharIdx));
+    if (searchAnimCharIdx >= full.length) {
+      searchAnimTimer = setTimeout(() => { searchAnimDeleting = true; tickSearchAnimation(); }, 2200);
+      return;
+    }
+    searchAnimTimer = setTimeout(tickSearchAnimation, 55);
+  } else {
+    searchAnimCharIdx -= 1;
+    setSearchGhost(full.slice(0, Math.max(searchAnimCharIdx, SEARCH_PREFIX.length)));
+    if (searchAnimCharIdx <= SEARCH_PREFIX.length) {
+      searchAnimDeleting = false;
+      searchAnimCharIdx = SEARCH_PREFIX.length;
+      searchAnimPhraseIdx = (searchAnimPhraseIdx + 1) % searchAnimPhrases.length;
+      searchAnimTimer = setTimeout(tickSearchAnimation, 400);
+      return;
+    }
+    searchAnimTimer = setTimeout(tickSearchAnimation, 28);
+  }
+  updateSearchWrapState();
+}
+
+function startSearchAnimation() {
+  clearTimeout(searchAnimTimer);
+  searchAnimPhrases = buildSearchPhrases();
+  searchAnimPhraseIdx = 0;
+  searchAnimCharIdx = SEARCH_PREFIX.length;
+  searchAnimDeleting = false;
+  setSearchGhost(SEARCH_PREFIX);
+  searchAnimTimer = setTimeout(tickSearchAnimation, 600);
+  updateSearchWrapState();
+}
+
+function onSearchFocus() {
+  searchAnimPaused = true;
+  clearTimeout(searchAnimTimer);
+  setSearchGhost('');
+  updateSearchWrapState();
+}
+
+function onSearchBlur() {
+  searchAnimPaused = false;
+  const input = document.getElementById('search-input');
+  if (input && !input.value.trim()) startSearchAnimation();
+  else updateSearchWrapState();
+}
+
+function normalizeTagLabel(tag) {
+  if (!tag) return '';
+  return tag === 'AI Agent' ? 'Agent' : tag;
+}
+
+function itemMatchesTool(item, tool) {
+  if (tool === 'all') return true;
+  const want = normalizeTagLabel(tool);
+  return [item.tool, ...(item.tools || [])]
+    .some(t => normalizeTagLabel(t) === want);
+}
+
+function buildCardTags(item) {
+  const tool = normalizeTagLabel(item.tool || (item.tools && item.tools[0]) || '');
+  const regionLabel = item.is_domestic ? '国内' : '海外';
+  const raw = item.tech_points || item.tags || [];
+  const tags = [];
+  if (tool) tags.push(tool);
+  raw.forEach(t => {
+    const label = normalizeTagLabel(t);
+    if (!label || label === tool || tags.includes(label)) return;
+    tags.push(label);
+  });
+  tags.push(regionLabel);
+  return tags;
+}
+
+function mkChip(label, value, active, onClick, disabled = false) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'chip' + (active ? ' active' : '') + (disabled ? ' disabled' : '');
+  btn.textContent = label;
+  if (!disabled) btn.onclick = onClick;
+  return btn;
+}
+
+function renderDateFilters() {
+  const el = document.getElementById('date-filters');
+  el.innerHTML = '';
+  el.appendChild(mkChip('全部', 'all', activeDate === 'all', () => {
+    activeDate = 'all'; renderDateFilters(); applyFilters({ scroll: true });
+  }));
+  [...new Set(allItems.map(i => i.date))].sort().reverse().forEach(d => {
+    const n = allItems.filter(i => i.date === d).length;
+    el.appendChild(mkChip(`${d} · ${n}`, d, activeDate === d, () => {
+      activeDate = d; renderDateFilters(); applyFilters({ scroll: true });
+    }));
+  });
+}
+
+function renderToolFilters() {
+  const el = document.getElementById('tool-filters');
+  el.innerHTML = '';
+  el.appendChild(mkChip(`全部 · ${allItems.length}`, 'all', activeTool === 'all', () => {
+    activeTool = 'all'; renderToolFilters(); applyFilters({ scroll: true });
+  }));
+  ALL_TOOL_FILTERS.forEach(t => {
+    const n = allItems.filter(i => itemMatchesTool(i, t)).length;
+    el.appendChild(mkChip(`${t} · ${n}`, t, activeTool === t, () => {
+      activeTool = t; renderToolFilters(); applyFilters({ scroll: true });
+    }, n === 0));
+  });
+}
+
+function renderTechCloud() {
+  const counts = {};
+  allItems.forEach(i => (i.tech_points || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+  const el = document.getElementById('tech-cloud');
+  el.innerHTML = '';
+  Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([tag, n]) => {
+    el.appendChild(mkChip(`${tag} · ${n}`, tag, activeTags.has(tag), () => {
+      if (activeTags.has(tag)) activeTags.delete(tag);
+      else activeTags.add(tag);
+      renderTechCloud(); applyFilters({ scroll: true });
+    }));
+  });
+}
+
+function getFiltered() {
+  const q = searchQuery.trim().toLowerCase();
+  return allItems.filter(i => {
+    if (activeDate !== 'all' && i.date !== activeDate) return false;
+    if (!itemMatchesTool(i, activeTool)) return false;
+    if (activeRegion !== 'all') {
+      if ((i.is_domestic ? 'domestic' : 'overseas') !== activeRegion) return false;
+    }
+    if (activeTags.size && !(i.tech_points || []).some(t => activeTags.has(t))) return false;
+    if (q) {
+      const hay = `${i.title} ${i.short_summary} ${(i.tech_points || []).join(' ')}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function bindExcerptToggles(root) {
+  root.querySelectorAll('.story-card__excerpt-wrap').forEach(wrap => {
+    const excerpt = wrap.querySelector('.story-card__excerpt');
+    const toggle = wrap.querySelector('.excerpt-toggle');
+    if (!excerpt || !toggle) return;
+
+    excerpt.classList.add('is-clamped');
+    toggle.hidden = true;
+    toggle.textContent = '展开';
+
+    requestAnimationFrame(() => {
+      if (excerpt.scrollHeight > excerpt.clientHeight + 2) {
+        toggle.hidden = false;
+      }
+    });
+
+    toggle.onclick = () => {
+      const clamped = excerpt.classList.toggle('is-clamped');
+      toggle.textContent = clamped ? '展开' : '收起';
+    };
+  });
+}
+
+function createStoryCardElement(item) {
+  const art = document.createElement('article');
+  art.className = 'story-card';
+  art.dataset.id = item.id || '';
+
+  const title = item.short_title || item.title || '';
+  const excerpt = cardExcerpt(item);
+  const tags = buildCardTags(item);
+
+  const imgUrl = normalizeImageUrl(item.image_url);
+  const mediaInner = imgUrl
+    ? `<img src="${escapeHtml(imgUrl)}" alt="" loading="lazy"
+        onerror="this.onerror=null;this.classList.add('story-card__media-img--fallback')">`
+    : '';
+  const mediaHtml = `<div class="story-card__media">${mediaInner}</div>`;
+
+  art.innerHTML = `
+    ${mediaHtml}
+    <div class="story-card__body">
+      <time class="story-card__date">${escapeHtml(formatCardDate(item.date))}</time>
+      <h3 class="story-card__title">
+        <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
+      </h3>
+      <div class="story-card__excerpt-wrap">
+        <p class="story-card__excerpt is-clamped">${escapeHtml(excerpt)}</p>
+        <button type="button" class="excerpt-toggle" hidden>展开</button>
+      </div>
+      <div class="story-card__tags">
+        ${tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+      </div>
+      <a class="story-card__cta" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">阅读全文</a>
+    </div>
+  `;
+  return art;
+}
+
+function renderContent() {
+  const root = document.getElementById('content-area');
+  root.innerHTML = '';
+  const filtered = getFiltered();
+
+  if (!filtered.length) {
+    root.innerHTML = '<div class="empty">没有匹配的热点，试试调整筛选条件</div>';
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(i => { (groups[i.date] ||= []).push(i); });
+
+  Object.keys(groups).sort().reverse().forEach(date => {
+    const section = document.createElement('section');
+    section.className = 'day-section';
+    section.innerHTML = `
+      <div class="day-section__header">
+        <h2>${escapeHtml(date)}</h2>
+        <span class="day-section__count">${groups[date].length} 条</span>
+      </div>
+      <div class="cards-grid"></div>
+    `;
+    const grid = section.querySelector('.cards-grid');
+    const dayItems = groups[date];
+    dayItems.forEach(item => grid.appendChild(createStoryCardElement(item)));
+
+    root.appendChild(section);
+  });
+
+  bindExcerptToggles(root);
+}
+
+function scrollToFilteredResults() {
+  const root = document.getElementById('content-area');
+  if (!root) return;
+  const firstCard = root.querySelector('.story-card');
+  const target = firstCard || root.querySelector('.empty') || root;
+  requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    root.querySelectorAll('.story-card--focus').forEach(el => el.classList.remove('story-card--focus'));
+    if (firstCard) {
+      firstCard.classList.add('story-card--focus');
+      window.setTimeout(() => firstCard.classList.remove('story-card--focus'), 1200);
+    }
+  });
+}
+
+function applyFilters(opts = {}) {
+  const shouldScroll = opts.scroll === true && !isFirstRender;
+  searchQuery = document.getElementById('search-input').value;
+  renderContent();
+  if (!shouldScroll) return;
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(scrollToFilteredResults, 0);
+}
+
+function onSearchInput() {
+  const input = document.getElementById('search-input');
+  lastSearchValue = input.value;
+  searchInputSide.value = input.value;
+  if (input.value.trim()) {
+    clearTimeout(searchAnimTimer);
+    setSearchGhost('');
+  } else if (!searchAnimPaused) {
+    startSearchAnimation();
+  }
+  updateSearchWrapState();
+  applyFilters({ scroll: false });
+}
+
+function onSearchKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchQuery = document.getElementById('search-input').value;
+    searchInputSide.value = searchQuery;
+    applyFilters({ scroll: true });
+  }
+}
+
+function toggleRegion(reg) {
+  activeRegion = reg;
+  document.querySelectorAll('#region-filters .chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.reg === reg);
+  });
+  applyFilters({ scroll: true });
+}
+
+function resetFilters() {
+  activeDate = 'all';
+  activeRegion = 'all';
+  activeTool = 'all';
+  activeTags.clear();
+  searchQuery = '';
+  const input = document.getElementById('search-input');
+  input.value = '';
+  searchInputSide.value = '';
+  lastSearchValue = '';
+  toggleRegion('all');
+  renderDateFilters();
+  renderToolFilters();
+  renderTechCloud();
+  applyFilters({ scroll: false });
+  startSearchAnimation();
+}
+
+function init() {
+  renderDateFilters();
+  renderToolFilters();
+  renderTechCloud();
+  isFirstRender = true;
+  renderContent();
+  isFirstRender = false;
+  lastSearchValue = document.getElementById('search-input').value;
+  startSearchAnimation();
+}
+
+init();
+</script>
+
+</body>
+</html>
