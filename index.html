@@ -487,7 +487,7 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 32px;
-    align-items: stretch;
+    align-items: start;
   }
 
   @media (min-width: 768px) {
@@ -511,12 +511,40 @@
     border: 1px solid var(--border);
     scroll-margin-top: 20px;
     transition: transform 0.32s cubic-bezier(0.25, 0.1, 0.25, 1),
-                box-shadow 0.32s ease;
+                box-shadow 0.32s ease,
+                min-height 0.3s ease;
   }
 
   .story-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-card);
+  }
+
+  /* 展开：卡片随内容变长；折叠：恢复固定高度 */
+  .story-card--expanded {
+    z-index: 2;
+    height: auto;
+    max-height: none;
+    min-height: var(--card-height);
+    overflow: visible;
+    box-shadow: var(--shadow-card);
+  }
+
+  .story-card--expanded .story-card__body {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .story-card--expanded .story-card__excerpt-wrap {
+    flex: 0 1 auto;
+    overflow: visible;
+  }
+
+  .story-card--expanded .story-card__tags {
+    margin-top: 14px;
+    max-height: none;
+    overflow: visible;
   }
 
   .story-card--focus {
@@ -628,12 +656,10 @@
 
   .story-card__excerpt.is-clamped {
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    flex: 1 1 auto;
-    min-height: calc(var(--card-body-size) * 1.65 * 4);
-    max-height: calc(var(--card-body-size) * 1.65 * 4);
   }
 
   .excerpt-toggle {
@@ -653,6 +679,11 @@
   .excerpt-toggle:hover { color: var(--text); }
 
   .excerpt-toggle[hidden] { display: none; }
+
+  .story-card--expanded .excerpt-toggle {
+    display: inline-block;
+    flex: 0 0 auto;
+  }
 
   .story-card__tags {
     display: flex;
@@ -1614,6 +1645,13 @@ function getFiltered() {
   });
 }
 
+function excerptNeedsToggle(excerpt) {
+  excerpt.classList.remove('is-clamped');
+  const fullHeight = excerpt.scrollHeight;
+  excerpt.classList.add('is-clamped');
+  return fullHeight > excerpt.clientHeight + 2;
+}
+
 function bindExcerptToggles(root) {
   root.querySelectorAll('.story-card__excerpt-wrap').forEach(wrap => {
     const excerpt = wrap.querySelector('.story-card__excerpt');
@@ -1625,14 +1663,25 @@ function bindExcerptToggles(root) {
     toggle.textContent = '展开';
 
     requestAnimationFrame(() => {
-      if (excerpt.scrollHeight > excerpt.clientHeight + 2) {
+      if (excerptNeedsToggle(excerpt)) {
         toggle.hidden = false;
       }
     });
 
     toggle.onclick = () => {
-      const clamped = excerpt.classList.toggle('is-clamped');
-      toggle.textContent = clamped ? '展开' : '收起';
+      const card = wrap.closest('.story-card');
+      const clamped = excerpt.classList.contains('is-clamped');
+      if (clamped) {
+        excerpt.classList.remove('is-clamped');
+        if (card) card.classList.add('story-card--expanded');
+        toggle.textContent = '收起';
+        toggle.setAttribute('aria-expanded', 'true');
+      } else {
+        excerpt.classList.add('is-clamped');
+        if (card) card.classList.remove('story-card--expanded');
+        toggle.textContent = '展开';
+        toggle.setAttribute('aria-expanded', 'false');
+      }
     };
   });
 }
@@ -1662,7 +1711,7 @@ function createStoryCardElement(item) {
       </h3>
       <div class="story-card__excerpt-wrap">
         <p class="story-card__excerpt is-clamped">${escapeHtml(excerpt)}</p>
-        <button type="button" class="excerpt-toggle" hidden>展开</button>
+        <button type="button" class="excerpt-toggle" hidden aria-expanded="false">展开</button>
       </div>
       <div class="story-card__tags">
         ${tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
