@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Daily Digest</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #86868b;
+    --accent: #2997ff;
+    --border: rgba(0,0,0,0.08);
+    --radius: 20px;
+    --radius-sm: 14px;
+    --pill: 999px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06);
+    --shadow-card: 0 8px 40px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* —— Hero Banner —— */
+  .hero-banner {
+    position: relative;
+    min-height: 340px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .hero-banner__bg {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(8,12,28,0.35) 0%, rgba(8,12,28,0.82) 55%, rgba(8,12,28,0.95) 100%),
+      linear-gradient(135deg, #0a1628 0%, #1a1f3a 40%, #0d2137 100%);
+    background-size: cover;
+    background-position: center;
+  }
+  .hero-banner__bg.has-img {
+    background-image:
+      linear-gradient(180deg, rgba(6,10,24,0.25) 0%, rgba(6,10,24,0.75) 50%, rgba(6,10,24,0.92) 100%),
+      url("https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=2000&q=80");
+    background-size: cover;
+    background-position: center 30%;
+  }
+  .hero-banner__glow {
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(41,151,255,0.35) 0%, transparent 70%);
+    top: -120px;
+    right: -80px;
+    pointer-events: none;
+  }
+  .hero-banner__content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 56px 24px 40px;
+    color: #f5f5f7;
+  }
+  .hero-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.72);
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    border-radius: var(--pill);
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+  }
+  .hero-banner h1 {
+    margin: 0 0 12px;
+    font-size: clamp(2.25rem, 6vw, 3.25rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.35);
+  }
+  .hero-sub {
+    margin: 0;
+    max-width: 560px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.78);
+  }
+  .hero-sub.small {
+    margin-top: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+  }
+  .hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .hero-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(12px);
+  }
+  .hero-stat strong {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .hero-stat span {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* —— Toolbar & Search —— */
+  .toolbar {
+    margin-bottom: 24px;
+  }
+  .search-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: var(--text-tertiary);
+    pointer-events: none;
+  }
+  #search-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 48px;
+    border: none;
+    border-radius: var(--pill);
+    background: var(--surface);
+    font-size: 17px;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    outline: none;
+    transition: box-shadow 0.25s;
+  }
+  #search-input::placeholder { color: var(--text-tertiary); }
+  #search-input:focus {
+    box-shadow: 0 0 0 4px rgba(41,151,255,0.2), var(--shadow);
+  }
+
+  /* —— Filter deck —— */
+  .filter-deck {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 768px) {
+    .filter-deck {
+      grid-template-columns: 1fr 1fr;
+    }
+    .filter-card.span-2 { grid-column: span 2; }
+  }
+  .filter-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.8);
+  }
+  .filter-card__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .filter-card__head .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #eef4ff, #f5f5f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .chip-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 108px;
+    overflow-y: auto;
+    padding-bottom: 2px;
+  }
+  .chip-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+  .chip-scroll::-webkit-scrollbar-thumb {
+    background: #d2d2d7;
+    border-radius: 4px;
+  }
+  .chip {
+    appearance: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: var(--pill);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: #f5f5f7;
+    transition: all 0.22s cubic-bezier(0.25, 0.1, 0.25, 1);
+    white-space: nowrap;
+  }
+  .chip:hover {
+    background: #e8e8ed;
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+  .chip.active {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .chip.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .segmented {
+    display: inline-flex;
+    padding: 4px;
+    background: #f5f5f7;
+    border-radius: var(--pill);
+    width: 100%;
+    max-width: 280px;
+  }
+  .segmented .chip {
+    flex: 1;
+    text-align: center;
+    background: transparent;
+    border: none;
+  }
+  .segmented .chip.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .btn-reset {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin: 12px 0 4px;
+    padding: 12px;
+    border: none;
+    border-radius: var(--pill);
+    background: transparent;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-reset:hover { background: rgba(41,151,255,0.08); }
+
+  /* —— Date sections & Cards —— */
+  #content-area { scroll-margin-top: 24px; }
+  .day-section { margin-bottom: 40px; scroll-margin-top: 24px; }
+  .hotspot-card--focus {
+    animation: card-focus-pulse 1.1s ease;
+  }
+  @keyframes card-focus-pulse {
+    0%, 100% { box-shadow: var(--card-shadow, 0 4px 24px rgba(0,0,0,0.06)); }
+    35% { box-shadow: 0 0 0 3px rgba(41,151,255,0.45), 0 8px 32px rgba(41,151,255,0.12); }
+  }
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+  .day-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  .day-header .count {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 900px) {
+    .card-grid { grid-template-columns: 1fr 1fr; }
+    .hotspot-card.featured { grid-column: span 2; }
+  }
+
+  .hotspot-card {
+    --accent-color: #2997ff;
+    scroll-margin-top: 20px;
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: transform 0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+                box-shadow 0.28s ease;
+  }
+  .hotspot-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--accent-color);
+  }
+  .hotspot-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card);
+  }
+  .hotspot-card__inner {
+    padding: 24px 24px 24px 28px;
+  }
+  .hotspot-card__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: var(--pill);
+    letter-spacing: 0.02em;
+  }
+  .badge-domestic { background: #fff4e0; color: #9a6700; }
+  .badge-overseas { background: #e8f2ff; color: #004999; }
+  .badge-tool {
+    background: color-mix(in srgb, var(--accent-color) 12%, white);
+    color: color-mix(in srgb, var(--accent-color) 70%, black);
+  }
+  .hotspot-card__date {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+  .hotspot-card h3 {
+    margin: 0 0 14px;
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    line-height: 1.35;
+  }
+  .hotspot-card h3 a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .hotspot-card h3 a:hover { color: var(--accent-color); }
+  .summary-text {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #424245;
+    margin: 0;
+  }
+  .source-link {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 4px;
+  }
+  .source-link:hover { text-decoration: underline; }
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .tag {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: #f5f5f7;
+    padding: 6px 12px;
+    border-radius: var(--pill);
+  }
+  .empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text-tertiary);
+    font-size: 16px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  footer {
+    text-align: center;
+    padding: 48px 0 24px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+</style>
+</head>
+<body>
+
+<header class="hero-banner">
+  <div class="hero-banner__bg" id="hero-bg"></div>
+  <div class="hero-banner__glow"></div>
+  <div class="hero-banner__content">
+    <span class="hero-eyebrow">Weekly Intelligence</span>
+    <h1>AI Daily Digest</h1>
+    <p class="hero-sub" id="meta-line">加载中…</p>
+    <p class="hero-sub small" id="definition-line"></p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <strong id="total-count">0</strong>
+        <span>条重大热点</span>
+      </div>
+      <div class="hero-stat">
+        <span id="period-badge">近 7 天</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
+      </svg>
+      <input type="search" id="search-input" placeholder="搜索标题、摘要、技术点…（回车定位）" autocomplete="off"
+        oninput="onSearchInput()" onkeydown="onSearchKeydown(event)">
+    </div>
+
+    <div class="filter-deck">
+      <div class="filter-card">
+        <div class="filter-card__head"><span class="icon">📅</span>日期</div>
+        <div class="chip-scroll" id="date-filters"></div>
+      </div>
+      <div class="filter-card">
+        <div class="filter-card__head"><span class="icon">🌏</span>来源</div>
+        <div class="segmented" id="region-filters">
+          <button type="button" class="chip active" data-reg="all" onclick="toggleRegion('all')">全部</button>
+          <button type="button" class="chip" data-reg="domestic" onclick="toggleRegion('domestic')">国内</button>
+          <button type="button" class="chip" data-reg="overseas" onclick="toggleRegion('overseas')">海外</button>
+        </div>
+      </div>
+      <div class="filter-card span-2">
+        <div class="filter-card__head"><span class="icon">🧰</span>工具</div>
+        <div class="chip-scroll" id="tool-filters"></div>
+      </div>
+      <div class="filter-card span-2">
+        <div class="filter-card__head"><span class="icon">🏷️</span>技术点</div>
+        <div class="chip-scroll" id="tech-cloud"></div>
+      </div>
+    </div>
+  </section>
+
+  <button type="button" class="btn-reset" onclick="resetFilters()">↺ 重置所有筛选</button>
+
+  <main id="content-area"></main>
+  <footer>数据内联 · 双击即可离线浏览（Hero 图需联网加载）</footer>
+</div>
+
+<script id="dashboard-data" type="application/json">
+{
+  "meta": {
+    "generated_at": "2026-05-27",
+    "period": "2026-05-21 ~ 2026-05-27",
+    "window_days": 7,
+    "total": 12,
+    "definition": "近 7 天（含今天）对 AI 行业/工具有实质影响的重大更新，含模型、Agent、API、协议、国内工具与太空算力基础设施。"
+  },
+  "items": [
+    {
+      "title": "SpaceX launches Starship v3 rocket",
+      "url": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-v3-megarocket-first-test-flight",
+      "summary": "https://www.nbcnews.com/now/video/spacex-successfully-launch... [video] Comments URL: https://news.ycombinator.com/item?id=48242959 Points: 441 # Comments: 313",
+      "source": "hn_space",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "太空算力",
+      "tool": "太空算力",
+      "tools": [
+        "太空算力",
+        "行业动态"
+      ],
+      "tech_points": [
+        "太空算力"
+      ],
+      "hn_points": 441,
+      "hn_comments": 313,
+      "stars": 0,
+      "score": 96,
+      "short_title": "SpaceX launches Starship v3 rocket",
+      "short_summary": "在近7天窗口内（截至2026-05-22），SpaceX launches Starship v3 rocket成为太空算力领域的重要动态，技术焦点涵盖太空算力。SpaceX推进Starship v3 相关测试，社区将其与轨道数据中心、太空算力部署联系起来。讨论重点包括可回收运力、发射节奏，以及未来在轨AI训练/推理基础设施的可行性。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），SpaceX launches Starship v3 rocket成为太空算力领域的重要动态，技术焦点涵盖太空算力。SpaceX推进Starship v3 相关测试，社区将其与轨道数据中心、太空算力部署联系起来。讨论重点包括可回收运力、发射节奏，以及未来在轨AI训练/推理基础设施的可行性。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。 <a href=\"https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-v3-megarocket-first-test-flight\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "这标志着 AI 竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "id": "1",
+      "tags": [
+        "太空算力"
+      ]
+    },
+    {
+      "title": "SpaceX IPO 文件将公司重新定义为 AI 基础设施平台，规划轨道 AI 算力卫星",
+      "url": "https://www.datacenterknowledge.com/build-design/spacex-ipo-filing-recasts-company-as-ai-infrastructure-giant",
+      "summary": "SpaceX 在 S-1 中披露 Colossus 训练集群、Starlink 光网与轨道 AI 计算卫星计划，最早 2028 年部署，以绕开地面电力与散热瓶颈。",
+      "source": "curated",
+      "date": "2026-05-21",
+      "is_domestic": false,
+      "vendor": "SpaceX",
+      "tool": "太空算力",
+      "tools": [
+        "太空算力",
+        "行业动态"
+      ],
+      "tech_points": [
+        "太空算力",
+        "算力基础设施"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 75,
+      "short_title": "SpaceX IPO 文件将公司重新定义为 AI 基础设施平台，规划轨道 AI 算力卫星",
+      "short_summary": "在近7天窗口内（截至2026-05-21），SpaceX IPO文件将公司重新定义为AI基础设施平台，规划轨道AI算力卫星成为太空算力领域的重要动态，技术焦点涵盖太空算力、算力基础设施。SpaceX在 S-1 中披露Colossus训练集群、Starlink光网与轨道AI计算卫星计划，最早2028年部署，以绕开地面电力与散热瓶颈。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-21），SpaceX IPO文件将公司重新定义为AI基础设施平台，规划轨道AI算力卫星成为太空算力领域的重要动态，技术焦点涵盖太空算力、算力基础设施。SpaceX在 S-1 中披露Colossus训练集群、Starlink光网与轨道AI计算卫星计划，最早2028年部署，以绕开地面电力与散热瓶颈。Insight：这标志着AI竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。 <a href=\"https://www.datacenterknowledge.com/build-design/spacex-ipo-filing-recasts-company-as-ai-infrastructure-giant\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：行业报道</a></p>",
+      "insight": "这标志着 AI 竞争从模型层上移到“能源+网络+轨道算力”的基础设施层，长期会改变训练/推理成本曲线与地缘算力布局。",
+      "id": "2",
+      "tags": [
+        "太空算力",
+        "算力基础设施"
+      ]
+    },
+    {
+      "title": "OpenAI, Grupo Folha and Grupo UOL announce strategic content partnership",
+      "url": "https://openai.com/index/grupo-folha-grupo-uol-partnership",
+      "summary": "OpenAI partners with Grupo Folha and Grupo UOL to bring trusted Brazilian journalism to ChatGPT, expanding access to news with attribution and transparency.",
+      "source": "openai_news",
+      "date": "2026-05-25",
+      "is_domestic": false,
+      "vendor": "OpenAI",
+      "tool": "OpenAI",
+      "tools": [
+        "OpenAI"
+      ],
+      "tech_points": [
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 71,
+      "short_title": "OpenAI, Grupo Folha and Grupo UOL announce strategic cont…",
+      "short_summary": "在近7天窗口内（截至2026-05-25），OpenAI, Grupo Folha and Grupo UOL announce strategic content partnership成为OpenAI领域的重要动态，技术焦点涵盖产品更新。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-25），OpenAI, Grupo Folha and Grupo UOL announce strategic content partnership成为OpenAI领域的重要动态，技术焦点涵盖产品更新。 <a href=\"https://openai.com/index/grupo-folha-grupo-uol-partnership\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "OpenAI 本次更新直接影响 产品更新 能力边界，建议关注其 API/定价/企业版落地节奏。",
+      "id": "3",
+      "tags": [
+        "产品更新"
+      ]
+    },
+    {
+      "title": "OpenAI named a Leader in enterprise coding agents by Gartner",
+      "url": "https://openai.com/index/gartner-2026-agentic-coding-leader",
+      "summary": "OpenAI is named a leader in the 2026 Gartner Magic Quadrant for Enterprise AI Coding Agents, with Codex recognized for innovation and enterprise-scale deployment.",
+      "source": "openai_news",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "Codex",
+      "tool": "Codex",
+      "tools": [
+        "Codex",
+        "OpenAI",
+        "AI Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "代码能力"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 71,
+      "short_title": "OpenAI named a Leader in enterprise coding agents by Gart…",
+      "short_summary": "在近7天窗口内（截至2026-05-22），OpenAI named a Leader in enterprise coding agents by Gartner成为Codex领域的重要动态，技术焦点涵盖Agent、代码能力。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），OpenAI named a Leader in enterprise coding agents by Gartner成为Codex领域的重要动态，技术焦点涵盖Agent、代码能力。 <a href=\"https://openai.com/index/gartner-2026-agentic-coding-leader\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "Codex 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "4",
+      "tags": [
+        "Agent",
+        "代码能力"
+      ]
+    },
+    {
+      "title": "Moonshot 发布 Kimi Code：面向下一代 Agent 的开源开发框架",
+      "url": "https://github.com/MoonshotAI/kimi-code",
+      "summary": "Kimi Code 作为 Moonshot 开源 Agent 开发入口，强调可组合的 coding/agent 工作流，便于团队快速搭建生产级 Agent。",
+      "source": "curated",
+      "date": "2026-05-22",
+      "is_domestic": true,
+      "vendor": "Moonshot",
+      "tool": "Kimi",
+      "tools": [
+        "Kimi",
+        "AI Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "代码能力",
+        "开源生态"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 71,
+      "short_title": "Moonshot 发布 Kimi Code：面向下一代 Agent 的开源开发框架",
+      "short_summary": "在近7天窗口内（截至2026-05-22），Moonshot发布Kimi Code：面向下一代Agent的开源开发框架成为Kimi领域的重要动态，技术焦点涵盖Agent、代码能力、开源生态。Kimi Code作为Moonshot开源Agent开发入口，强调可组合的coding/agent工作流，便于团队快速搭建生产级Agent。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），Moonshot发布Kimi Code：面向下一代Agent的开源开发框架成为Kimi领域的重要动态，技术焦点涵盖Agent、代码能力、开源生态。Kimi Code作为Moonshot开源Agent开发入口，强调可组合的coding/agent工作流，便于团队快速搭建生产级Agent。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://github.com/MoonshotAI/kimi-code\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：行业报道</a></p>",
+      "insight": "Kimi 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "5",
+      "tags": [
+        "Agent",
+        "代码能力",
+        "开源生态"
+      ]
+    },
+    {
+      "title": "Microsoft starts canceling Claude Code licenses",
+      "url": "https://www.theverge.com/tech/930447/microsoft-claude-code-discontinued-notepad",
+      "summary": "https://archive.ph/WfCta Comments URL: https://news.ycombinator.com/item?id=48238896 Points: 489 # Comments: 465",
+      "source": "hn_ai",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "Claude",
+      "tool": "Claude",
+      "tools": [
+        "Claude"
+      ],
+      "tech_points": [
+        "代码能力"
+      ],
+      "hn_points": 489,
+      "hn_comments": 465,
+      "stars": 0,
+      "score": 64,
+      "short_title": "Microsoft starts canceling Claude Code licenses",
+      "short_summary": "在近7天窗口内（截至2026-05-22），Microsoft starts canceling Claude Code licenses成为Claude领域的重要动态，技术焦点涵盖代码能力。围绕「Microsoft starts canceling Claude Code licenses」的讨论在Hacker News获得 489 热度分、465 条评论。社区主要关注Claude在代码能力场景中的可用性、成本与落地路径。Insight：Claude在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），Microsoft starts canceling Claude Code licenses成为Claude领域的重要动态，技术焦点涵盖代码能力。围绕「Microsoft starts canceling Claude Code licenses」的讨论在Hacker News获得 489 热度分、465 条评论。社区主要关注Claude在代码能力场景中的可用性、成本与落地路径。Insight：Claude在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://www.theverge.com/tech/930447/microsoft-claude-code-discontinued-notepad\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "Claude 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "6",
+      "tags": [
+        "代码能力"
+      ]
+    },
+    {
+      "title": "DeepSeek makes the V4 Pro price discount permanent",
+      "url": "https://api-docs.deepseek.com/quick_start/pricing",
+      "summary": "> (3) The deepseek-v4-pro model API pricing will be officially adjusted to 1/4 of the original price after the 75% discount promotion ends on 2026/05/31 15:59 UTC.https://x.com/deepseek_ai/status/2057854261699195173Related ongoing thread:DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost - https://news.ycombinator.com/item?id=48256953 - May 2026 (135 comments) Comments URL: https://news.ycombinator.com/item?id=48237663 Points: 616 # Comments: 545",
+      "source": "hn_ai",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "DeepSeek",
+      "tool": "DeepSeek",
+      "tools": [
+        "DeepSeek",
+        "AI Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "API",
+        "代码能力",
+        "推理能力"
+      ],
+      "hn_points": 616,
+      "hn_comments": 545,
+      "stars": 0,
+      "score": 64,
+      "short_title": "DeepSeek makes the V4 Pro price discount permanent",
+      "short_summary": "在近7天窗口内（截至2026-05-22），DeepSeek makes the V4 Pro price discount permanent成为DeepSeek领域的重要动态，技术焦点涵盖Agent、API、代码能力、推理能力。围绕「DeepSeek makes the V4 Pro price discount permanent」的讨论在Hacker News获得 616 热度分、545 条评论。社区主要关注DeepSeek在Agent、API、代码能力、推理能力场景中的可用性、成本与落地路径。Insight：DeepSeek在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），DeepSeek makes the V4 Pro price discount permanent成为DeepSeek领域的重要动态，技术焦点涵盖Agent、API、代码能力、推理能力。围绕「DeepSeek makes the V4 Pro price discount permanent」的讨论在Hacker News获得 616 热度分、545 条评论。社区主要关注DeepSeek在Agent、API、代码能力、推理能力场景中的可用性、成本与落地路径。Insight：DeepSeek在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://api-docs.deepseek.com/quick_start/pricing\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "DeepSeek 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "7",
+      "tags": [
+        "Agent",
+        "API",
+        "代码能力",
+        "推理能力"
+      ]
+    },
+    {
+      "title": "DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost",
+      "url": "https://esengine.github.io/DeepSeek-Reasonix/",
+      "summary": "Related ongoing thread:DeepSeek makes the V4 Pro price discount permanent - https://news.ycombinator.com/item?id=48237663 - May 2026 (384 comments) Comments URL: https://news.ycombinator.com/item?id=48256953 Points: 723 # Comments: 280",
+      "source": "hn_ai",
+      "date": "2026-05-24",
+      "is_domestic": false,
+      "vendor": "DeepSeek",
+      "tool": "DeepSeek",
+      "tools": [
+        "DeepSeek",
+        "AI Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "代码能力",
+        "推理能力"
+      ],
+      "hn_points": 723,
+      "hn_comments": 280,
+      "stars": 0,
+      "score": 63,
+      "short_title": "DeepSeek reasonix, DeepSeek native coding agent with high…",
+      "short_summary": "在近7天窗口内（截至2026-05-24），DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost成为DeepSeek领域的重要动态，技术焦点涵盖Agent、代码能力、推理能力。围绕「DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost」的讨论在Hacker News获得 723 热度分、280 条评论。社区主要关注DeepSeek在Agent、代码能力、推理能力场景中的可用性、成本与落地路径。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-24），DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost成为DeepSeek领域的重要动态，技术焦点涵盖Agent、代码能力、推理能力。围绕「DeepSeek reasonix, DeepSeek native coding agent with high caching and low cost」的讨论在Hacker News获得 723 热度分、280 条评论。社区主要关注DeepSeek在Agent、代码能力、推理能力场景中的可用性、成本与落地路径。 <a href=\"https://esengine.github.io/DeepSeek-Reasonix/\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：Hacker News</a></p>",
+      "insight": "DeepSeek 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "8",
+      "tags": [
+        "Agent",
+        "代码能力",
+        "推理能力"
+      ]
+    },
+    {
+      "title": "How Virgin Atlantic ships faster with Codex",
+      "url": "https://openai.com/index/virgin-atlantic",
+      "summary": "How Virgin Atlantic used Codex to ship its revamped mobile app on a fixed holiday travel deadline, reaching near-total unit test coverage and zero P1 defects.",
+      "source": "openai_news",
+      "date": "2026-05-22",
+      "is_domestic": false,
+      "vendor": "Codex",
+      "tool": "Codex",
+      "tools": [
+        "Codex"
+      ],
+      "tech_points": [
+        "代码能力"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 57,
+      "short_title": "How Virgin Atlantic ships faster with Codex",
+      "short_summary": "在近7天窗口内（截至2026-05-22），How Virgin Atlantic ships faster with Codex成为Codex领域的重要动态，技术焦点涵盖代码能力。据OpenAI披露：How Virgin Atlantic used Codex to ship its revamped mobile app on a fixed holiday travel deadline, reaching near-total unit test coverage and zero P1 defects.Insight：Codex在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-22），How Virgin Atlantic ships faster with Codex成为Codex领域的重要动态，技术焦点涵盖代码能力。据OpenAI披露：How Virgin Atlantic used Codex to ship its revamped mobile app on a fixed holiday travel deadline, reaching near-total unit test coverage and zero P1 defects.Insight：Codex在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://openai.com/index/virgin-atlantic\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "Codex 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "9",
+      "tags": [
+        "代码能力"
+      ]
+    },
+    {
+      "title": "AdventHealth advances whole-person care with OpenAI",
+      "url": "https://openai.com/index/adventhealth",
+      "summary": "AdventHealth is using ChatGPT for Healthcare to streamline workflows, reduce administrative burden, and return more time to patient care.",
+      "source": "openai_news",
+      "date": "2026-05-21",
+      "is_domestic": false,
+      "vendor": "OpenAI",
+      "tool": "OpenAI",
+      "tools": [
+        "OpenAI"
+      ],
+      "tech_points": [
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 57,
+      "short_title": "AdventHealth advances whole-person care with OpenAI",
+      "short_summary": "在近7天窗口内（截至2026-05-21），AdventHealth advances whole-person care with OpenAI成为OpenAI领域的重要动态，技术焦点涵盖产品更新。据OpenAI披露：AdventHealth is using ChatGPT for Healthcare to streamline workflows, reduce administrative burden, and return more time to patient care.Insight：OpenAI本次更新直接影响产品更新能力边界，建议关注其API/定价/企业版落地节奏。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-21），AdventHealth advances whole-person care with OpenAI成为OpenAI领域的重要动态，技术焦点涵盖产品更新。据OpenAI披露：AdventHealth is using ChatGPT for Healthcare to streamline workflows, reduce administrative burden, and return more time to patient care.Insight：OpenAI本次更新直接影响产品更新能力边界，建议关注其API/定价/企业版落地节奏。 <a href=\"https://openai.com/index/adventhealth\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：OpenAI</a></p>",
+      "insight": "OpenAI 本次更新直接影响 产品更新 能力边界，建议关注其 API/定价/企业版落地节奏。",
+      "id": "10",
+      "tags": [
+        "产品更新"
+      ]
+    },
+    {
+      "title": "国产 Agent 模型闯入全球第一梯队，限时免费开放",
+      "url": "https://www.qbitai.com/2026/05/424851.html",
+      "summary": "量子位报道国产 Agent 模型在多项基准上进入全球第一梯队，并开启限时免费策略，反映国内模型在 Agent 场景的产品化提速。",
+      "source": "qbitai",
+      "date": "2026-05-26",
+      "is_domestic": true,
+      "vendor": "Moonshot",
+      "tool": "Kimi",
+      "tools": [
+        "Kimi",
+        "AI Agent"
+      ],
+      "tech_points": [
+        "Agent",
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 54,
+      "short_title": "国产 Agent 模型闯入全球第一梯队，限时免费开放",
+      "short_summary": "在近7天窗口内（截至2026-05-26），国产Agent模型闯入全球第一梯队，限时免费开放成为Kimi领域的重要动态，技术焦点涵盖Agent、产品更新。量子位报道国产Agent模型在多项基准上进入全球第一梯队，并开启限时免费策略，反映国内模型在Agent场景的产品化提速。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-26），国产Agent模型闯入全球第一梯队，限时免费开放成为Kimi领域的重要动态，技术焦点涵盖Agent、产品更新。量子位报道国产Agent模型在多项基准上进入全球第一梯队，并开启限时免费策略，反映国内模型在Agent场景的产品化提速。Insight：Kimi在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换IDE。 <a href=\"https://www.qbitai.com/2026/05/424851.html\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：量子位</a></p>",
+      "insight": "Kimi 在工程生产力上的边界继续外扩，团队需要同步调整代码评审、测试与合规流程，而不是只替换 IDE。",
+      "id": "11",
+      "tags": [
+        "Agent",
+        "产品更新"
+      ]
+    },
+    {
+      "title": "华为发布AI DC数据基础设施全栈方案，加速行业智能化跃升",
+      "url": "https://www.qbitai.com/2026/05/425296.html",
+      "summary": "",
+      "source": "qbitai",
+      "date": "2026-05-26",
+      "is_domestic": true,
+      "vendor": "行业动态",
+      "tool": "行业动态",
+      "tools": [
+        "行业动态"
+      ],
+      "tech_points": [
+        "产品更新"
+      ],
+      "hn_points": 0,
+      "hn_comments": 0,
+      "stars": 0,
+      "score": 48,
+      "short_title": "华为发布AI DC数据基础设施全栈方案，加速行业智能化跃升",
+      "short_summary": "在近7天窗口内（截至2026-05-26），华为发布AI DC数据基础设施全栈方案，加速行业智能化跃升成为行业动态领域的重要动态，技术焦点涵盖产品更新。本周行业动态在产品更新方向出现重要进展，建议持续跟踪官方文档、API变更与企业版落地节奏。Insight：行业动态本次更新直接影响产品更新能力边界，建议关注其API/定价/企业版落地节奏。",
+      "summary_html": "<p class=\"summary-text\">在近7天窗口内（截至2026-05-26），华为发布AI DC数据基础设施全栈方案，加速行业智能化跃升成为行业动态领域的重要动态，技术焦点涵盖产品更新。本周行业动态在产品更新方向出现重要进展，建议持续跟踪官方文档、API变更与企业版落地节奏。Insight：行业动态本次更新直接影响产品更新能力边界，建议关注其API/定价/企业版落地节奏。 <a href=\"https://www.qbitai.com/2026/05/425296.html\" target=\"_blank\" rel=\"noopener\" class=\"source-link\">来源：量子位</a></p>",
+      "insight": "行业动态 本次更新直接影响 产品更新 能力边界，建议关注其 API/定价/企业版落地节奏。",
+      "id": "12",
+      "tags": [
+        "产品更新"
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+const ALL_TOOL_FILTERS = ["OpenAI", "Codex", "Claude", "Gemini", "DeepSeek", "Kimi", "Qwen", "通义", "文心", "豆包", "Cursor", "Copilot", "MCP", "AI Agent", "太空算力", "行业动态"];
+const TOOL_COLORS = {
+  "OpenAI": "#10a37f", "Codex": "#10a37f", "Claude": "#d97757", "Gemini": "#4285f4",
+  "DeepSeek": "#4d6bfe", "Kimi": "#1a1a2e", "Qwen": "#624aff", "通义": "#624aff",
+  "文心": "#2932e1", "豆包": "#00c9a7", "Cursor": "#1a1a1a", "Copilot": "#0078d4",
+  "MCP": "#6366f1", "AI Agent": "#8b5cf6", "太空算力": "#0ea5e9", "行业动态": "#64748b",
+};
+
+const payload = JSON.parse(document.getElementById('dashboard-data').textContent);
+const allItems = payload.items || [];
+const meta = payload.meta || {};
+
+let activeDate = 'all';
+let activeRegion = 'all';
+let activeTool = 'all';
+let activeTags = new Set();
+let searchQuery = '';
+let isFirstRender = true;
+let scrollTimer = null;
+let lastSearchValue = '';
+
+// Hero 背景图加载
+(function() {
+  const bg = document.getElementById('hero-bg');
+  const img = new Image();
+  img.onload = () => bg.classList.add('has-img');
+  img.src = "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=2000&q=80";
+})();
+
+function itemMatchesTool(item, tool) {
+  if (tool === 'all') return true;
+  return [item.tool, ...(item.tools || [])].includes(tool);
+}
+
+function mkChip(label, value, active, onClick, disabled = false) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'chip' + (active ? ' active' : '') + (disabled ? ' disabled' : '');
+  btn.textContent = label;
+  if (!disabled) btn.onclick = onClick;
+  return btn;
+}
+
+function renderDateFilters() {
+  const el = document.getElementById('date-filters');
+  el.innerHTML = '';
+  el.appendChild(mkChip('全部', 'all', activeDate === 'all', () => {
+    activeDate = 'all'; renderDateFilters(); applyFilters({ scroll: true });
+  }));
+  [...new Set(allItems.map(i => i.date))].sort().reverse().forEach(d => {
+    const n = allItems.filter(i => i.date === d).length;
+    el.appendChild(mkChip(`${d} · ${n}`, d, activeDate === d, () => {
+      activeDate = d; renderDateFilters(); applyFilters({ scroll: true });
+    }));
+  });
+}
+
+function renderToolFilters() {
+  const el = document.getElementById('tool-filters');
+  el.innerHTML = '';
+  el.appendChild(mkChip(`全部 · ${allItems.length}`, 'all', activeTool === 'all', () => {
+    activeTool = 'all'; renderToolFilters(); applyFilters({ scroll: true });
+  }));
+  ALL_TOOL_FILTERS.forEach(t => {
+    const n = allItems.filter(i => itemMatchesTool(i, t)).length;
+    el.appendChild(mkChip(`${t} · ${n}`, t, activeTool === t, () => {
+      activeTool = t; renderToolFilters(); applyFilters({ scroll: true });
+    }, n === 0));
+  });
+}
+
+function renderTechCloud() {
+  const counts = {};
+  allItems.forEach(i => (i.tech_points || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+  const el = document.getElementById('tech-cloud');
+  el.innerHTML = '';
+  Object.entries(counts).sort((a,b) => b[1]-a[1]).forEach(([tag, n]) => {
+    el.appendChild(mkChip(`${tag} · ${n}`, tag, activeTags.has(tag), () => {
+      if (activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
+      renderTechCloud(); applyFilters({ scroll: true });
+    }));
+  });
+}
+
+function getFiltered() {
+  const q = searchQuery.trim().toLowerCase();
+  return allItems.filter(i => {
+    if (activeDate !== 'all' && i.date !== activeDate) return false;
+    if (!itemMatchesTool(i, activeTool)) return false;
+    if (activeRegion !== 'all') {
+      if ((i.is_domestic ? 'domestic' : 'overseas') !== activeRegion) return false;
+    }
+    if (activeTags.size && !(i.tech_points || []).some(t => activeTags.has(t))) return false;
+    if (q) {
+      const hay = `${i.title} ${i.short_summary} ${(i.tech_points||[]).join(' ')}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderContent() {
+  const root = document.getElementById('content-area');
+  root.innerHTML = '';
+  const filtered = getFiltered();
+  document.getElementById('total-count').textContent = filtered.length;
+
+  if (!filtered.length) {
+    root.innerHTML = '<div class="empty">没有匹配的热点，试试调整日期或工具筛选</div>';
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(i => { (groups[i.date] ||= []).push(i); });
+
+  Object.keys(groups).sort().reverse().forEach(date => {
+    const section = document.createElement('section');
+    section.className = 'day-section';
+    section.innerHTML = `
+      <div class="day-header">
+        <h2>${date}</h2>
+        <span class="count">${groups[date].length} 条热点</span>
+      </div>
+      <div class="card-grid"></div>
+    `;
+    const grid = section.querySelector('.card-grid');
+
+    groups[date].forEach((item, idx) => {
+      const accent = TOOL_COLORS[item.tool] || '#2997ff';
+      const art = document.createElement('article');
+      art.className = 'hotspot-card' + (idx === 0 && groups[date].length === 1 ? ' featured' : '');
+      art.style.setProperty('--accent-color', accent);
+
+      const flag = item.is_domestic ? ['国内', 'badge-domestic'] : ['海外', 'badge-overseas'];
+      const tools = (item.tools && item.tools.length) ? item.tools : [item.tool];
+
+      art.innerHTML = `
+        <div class="hotspot-card__inner">
+          <div class="hotspot-card__top">
+            <span class="badge ${flag[1]}">${flag[0]}</span>
+            ${tools.map(t => `<span class="badge badge-tool">${t}</span>`).join('')}
+            <span class="hotspot-card__date">${item.date}</span>
+          </div>
+          <h3><a href="${item.url}" target="_blank" rel="noopener">${item.short_title || item.title}</a></h3>
+          ${item.summary_html || `<p class="summary-text">${item.short_summary || ''}</p>`}
+          <div class="tag-row">${(item.tech_points||[]).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        </div>
+      `;
+      grid.appendChild(art);
+    });
+
+    root.appendChild(section);
+  });
+}
+
+function scrollToFilteredResults() {
+  const root = document.getElementById('content-area');
+  if (!root) return;
+  const firstCard = root.querySelector('.hotspot-card');
+  const target = firstCard || root.querySelector('.empty') || root;
+  requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    root.querySelectorAll('.hotspot-card--focus').forEach(el => el.classList.remove('hotspot-card--focus'));
+    if (firstCard) {
+      firstCard.classList.add('hotspot-card--focus');
+      window.setTimeout(() => firstCard.classList.remove('hotspot-card--focus'), 1200);
+    }
+  });
+}
+
+function applyFilters(opts = {}) {
+  const shouldScroll = opts.scroll === true && !isFirstRender;
+  searchQuery = document.getElementById('search-input').value;
+  renderContent();
+  if (!shouldScroll) return;
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(scrollToFilteredResults, 0);
+}
+
+function onSearchInput() {
+  const input = document.getElementById('search-input');
+  lastSearchValue = input.value;
+  applyFilters({ scroll: false });
+}
+
+function onSearchKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchQuery = document.getElementById('search-input').value;
+    applyFilters({ scroll: true });
+  }
+}
+
+function toggleRegion(reg) {
+  activeRegion = reg;
+  document.querySelectorAll('#region-filters .chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.reg === reg);
+  });
+  applyFilters({ scroll: true });
+}
+
+function resetFilters() {
+  activeDate = 'all';
+  activeRegion = 'all';
+  activeTool = 'all';
+  activeTags.clear();
+  searchQuery = '';
+  const input = document.getElementById('search-input');
+  input.value = '';
+  lastSearchValue = '';
+  toggleRegion('all');
+  renderDateFilters();
+  renderToolFilters();
+  renderTechCloud();
+  applyFilters({ scroll: false });
+}
+
+function init() {
+  document.getElementById('meta-line').textContent =
+    `精选 ${meta.total || allItems.length} 条重大更新 · 生成于 ${meta.generated_at || '—'}`;
+  document.getElementById('definition-line').textContent = meta.definition || '';
+  document.getElementById('period-badge').textContent = meta.period ? `窗口 ${meta.period}` : '近 7 天';
+  document.getElementById('total-count').textContent = allItems.length;
+  renderDateFilters();
+  renderToolFilters();
+  renderTechCloud();
+  isFirstRender = true;
+  renderContent();
+  isFirstRender = false;
+  lastSearchValue = document.getElementById('search-input').value;
+}
+
+init();
+</script>
+</body>
+</html>
